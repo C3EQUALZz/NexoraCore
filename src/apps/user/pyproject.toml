@@ -1,0 +1,18 @@
+[project]
+name = "microservice-user"
+version = "0.1.0"
+description = "Microservice for user domain"
+authors = [
+    {name = "matebookWindows",email = "dan.kovalev2013@gmail.com"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic (>=2.10.6,<3.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
