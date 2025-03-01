@@ -5,6 +5,6 @@ from app.domain.values.shared import URL
 
 
 @dataclass(eq=False)
-class SocialNetwork(BaseEntity):
+class SocialNetworkEntity(BaseEntity):
     platform: str
     url: URL
