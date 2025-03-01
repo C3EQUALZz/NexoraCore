@@ -4,7 +4,7 @@ from app.domain.entities.base import BaseEntity
 
 
 @dataclass(eq=False)
-class Address(BaseEntity):
+class AddressEntity(BaseEntity):
     country: str
     city: str
     street: str
