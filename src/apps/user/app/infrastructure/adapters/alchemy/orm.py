@@ -1,8 +1,10 @@
 from sqlalchemy import Table, Column, String, ForeignKey, DateTime, JSON
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.infrastructure.adapters.alchemy.metadata import metadata, mapper_registry
+from app.infrastructure.adapters.alchemy.type_decorators import PhoneNumberTypeDecorator
 
 roles_table = Table(
     "roles",
@@ -40,10 +42,9 @@ bios_table = Table(
     metadata,
     Column("id", UUID(as_uuid=True), primary_key=True),
     Column("user_id", UUID(as_uuid=True), ForeignKey("users.id", onupdate='CASCADE', ondelete='CASCADE'), unique=True),
-    Column("phone_number", String(20)),
+    Column("phone_number", PhoneNumberTypeDecorator),
     Column("photo_url", String(255)),
     Column("gender", String(10)),
-    Column("social_networks", JSON),  # Хранение списка социальных сетей
     Column("created_at", DateTime, default=func.now()),
     Column("updated_at", DateTime, default=func.now(), onupdate=func.now()),
 )
@@ -84,6 +85,21 @@ def start_mappers() -> None:
     mapper_registry.map_imperatively(Role, roles_table)
     mapper_registry.map_imperatively(Status, statuses_table)
     mapper_registry.map_imperatively(AddressEntity, addresses_table)
-    mapper_registry.map_imperatively(SocialNetworkEntity, social_networks_table)
     mapper_registry.map_imperatively(UserEntity, users_table)
-    mapper_registry.map_imperatively(BioEntity, bios_table)
+
+    mapper_registry.map_imperatively(
+        SocialNetworkEntity,
+        social_networks_table,
+        properties={
+            "bio": relationship(BioEntity, back_populates="social_networks"),
+        }
+    )
+    mapper_registry.map_imperatively(
+        BioEntity,
+        bios_table,
+        properties={
+            "social_networks": relationship(SocialNetworkEntity, back_populates="bio", cascade="all, delete-orphan"),
+        }
+    )
+
+
