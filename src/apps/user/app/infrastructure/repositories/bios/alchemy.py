@@ -1,13 +1,13 @@
 from typing import override, Sequence, Any
 
-from sqlalchemy import delete, select, Result, Row, RowMapping, insert
+from sqlalchemy import delete, select, Result, Row, RowMapping, insert, update
 
 from app.domain.entities.bio import BioEntity
 from app.infrastructure.repositories.base import SQLAlchemyAbstractRepository
-from app.infrastructure.repositories.bios.base import BioRepository
+from app.infrastructure.repositories.bios.base import BiosRepository
 
 
-class SQLAlchemyBiosRepository(SQLAlchemyAbstractRepository, BioRepository):
+class SQLAlchemyBiosRepository(SQLAlchemyAbstractRepository, BiosRepository):
 
     @override
     async def get_by_user_oid(self, user_id: str) -> BioEntity | None:
@@ -30,12 +30,18 @@ class SQLAlchemyBiosRepository(SQLAlchemyAbstractRepository, BioRepository):
         result: Result = await self._session.execute(
             select(BioEntity).filter_by(oid=oid)
         )
-
         return result.scalar_one_or_none()
 
     @override
     async def update(self, oid: str, model: BioEntity) -> BioEntity:
-        ...
+        result: Result = await self._session.execute(
+            update(BioEntity)
+            .filter_by(oid=oid)
+            .values(**await model.to_dict(exclude={"id"}))
+            .returning(BioEntity)
+        )
+
+        return result.scalar_one()
 
     @override
     async def list(self, start: int = 0, limit: int = 10) -> list[BioEntity]:

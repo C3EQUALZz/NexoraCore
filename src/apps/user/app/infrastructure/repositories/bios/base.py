@@ -3,7 +3,7 @@ from app.infrastructure.repositories.base import AbstractRepository
 from abc import ABC, abstractmethod
 
 
-class BioRepository(AbstractRepository[BioEntity], ABC):
+class BiosRepository(AbstractRepository[BioEntity], ABC):
     @abstractmethod
     async def get_by_user_oid(self, user_id: str) -> BioEntity | None:
         raise NotImplementedError
