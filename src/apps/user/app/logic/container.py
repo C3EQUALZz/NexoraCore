@@ -1,4 +1,5 @@
 import logging
+from typing import cast
 
 from dishka import (
     Provider,
@@ -15,9 +16,38 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
+from app.infrastructure.uow.users.alchemy import SQLAlchemyTradingResultUnitOfWork
+from app.infrastructure.uow.users.base import UsersUnitOfWork
+from app.logic.commands.users import CreateUserCommand, UpdateUserCommand, VerifyUserCredentialsCommand
+from app.logic.handlers.users.commands import CreateUserCommandHandler, UpdateUserCommandHandler, \
+    VerifyUserCredentialsCommandHandler
+from app.logic.types.handlers import CommandHandlerMapping, EventHandlerMapping
 from app.settings.config import Settings
 
 logger = logging.getLogger(__name__)
+
+
+class HandlerProvider(Provider):
+    @provide(scope=Scope.APP)
+    async def get_mapping_and_command_handlers(self) -> CommandHandlerMapping:
+        """
+        Here you have to link commands and command handlers for future inject in Bootstrap
+        """
+        return cast(
+            CommandHandlerMapping,
+            {
+                CreateUserCommand: CreateUserCommandHandler,
+                UpdateUserCommand: UpdateUserCommandHandler,
+                VerifyUserCredentialsCommand: VerifyUserCredentialsCommandHandler,
+            },
+        )
+
+    @provide(scope=Scope.APP)
+    async def get_mapping_event_and_event_handlers(self) -> EventHandlerMapping:
+        """
+        Here you have to link events and event handlers for future inject in Bootstrap
+        """
+        return cast(EventHandlerMapping, {})
 
 
 class DatabaseProvider(Provider):
@@ -46,9 +76,14 @@ class DatabaseProvider(Provider):
 
         return session_maker
 
+    @provide(scope=Scope.APP)
+    async def get_users_uow(self, session_maker: async_sessionmaker[AsyncSession]) -> UsersUnitOfWork:
+        return SQLAlchemyTradingResultUnitOfWork(session_factory=session_maker)
+
 
 container = make_async_container(
     DatabaseProvider(),
+    HandlerProvider(),
     context={
         Settings: Settings(),
     }

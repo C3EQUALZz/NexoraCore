@@ -7,6 +7,7 @@ from app.infrastructure.adapters.alchemy.metadata import metadata
 from app.infrastructure.adapters.alchemy.orm import start_mappers
 from app.logic.container import container
 from dishka.integrations.fastapi import setup_dishka as setup_dishka_fastapi
+from app.application.api.v1.users.handlers import router as user_router
 
 
 @asynccontextmanager
@@ -37,6 +38,6 @@ def create_app() -> FastAPI:
 
     setup_dishka_fastapi(container=container, app=app)
 
-    # app.include_router(trading_result_router)
+    app.include_router(user_router)
 
     return app
