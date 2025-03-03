@@ -4,6 +4,7 @@ from dataclasses import (
     dataclass,
     field,
 )
+from datetime import datetime, UTC
 from typing import (
     Any,
     Dict,
@@ -23,6 +24,8 @@ class BaseEntity(ABC):
     """
 
     oid: str = field(default_factory=lambda: str(uuid4()), kw_only=True)
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC), kw_only=True)
+    updated_at: datetime = field(default_factory=lambda: datetime.now(UTC), kw_only=True)
 
     def __post_init__(self) -> None:
         for field_name, field_type in get_type_hints(self).items():
@@ -36,7 +39,11 @@ class BaseEntity(ABC):
                 except (ValueError, TypeError):
                     raise CastException(f"'{field_name}' with value '{value}' to {field_type}")
 
-    async def to_dict(self, exclude: Optional[Set[str]] = None, include: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def to_dict(
+            self,
+            exclude: Optional[Set[str]] = None,
+            include: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """
         Create a dictionary representation of the entity.
 

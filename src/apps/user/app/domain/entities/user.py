@@ -1,8 +1,6 @@
-from datetime import datetime, UTC
+from dataclasses import dataclass
 
 from app.domain.entities.base import BaseEntity
-from dataclasses import dataclass, field
-
 from app.domain.values.user import Email, Password, Role, Status
 
 
@@ -16,5 +14,4 @@ class UserEntity(BaseEntity):
     role: Role
     status: Status
 
-    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
-    updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+
