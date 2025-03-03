@@ -94,3 +94,12 @@ class PhoneNumberException(DomainException):
     @property
     def message(self) -> str:
         return "Phone number is invalid"
+
+
+@dataclass(eq=False)
+class UnExistingGenderException(DomainException):
+    value: str
+
+    @property
+    def message(self) -> str:
+        return f"Gender {self.value} does not exist, please choose male or female"

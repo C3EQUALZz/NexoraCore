@@ -3,7 +3,7 @@ from typing import override
 import re
 
 from app.domain.values.base import BaseValueObject
-from app.exceptions.domain import EmptyGenderException, PhoneNumberException
+from app.exceptions.domain import EmptyGenderException, PhoneNumberException, UnExistingGenderException
 
 
 @dataclass(frozen=True)
@@ -14,6 +14,9 @@ class Gender(BaseValueObject[str]):
     def validate(self) -> None:
         if not self.value:
             raise EmptyGenderException()
+
+        if self.value not in ("male", "female"):
+            raise UnExistingGenderException(self.value)
 
     @override
     def as_generic_type(self) -> str:
