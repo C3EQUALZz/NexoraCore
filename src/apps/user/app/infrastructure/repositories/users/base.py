@@ -7,7 +7,7 @@ from app.domain.entities.user import UserEntity
 from app.infrastructure.repositories.base import AbstractRepository
 
 
-class UserRepository(AbstractRepository[UserEntity], ABC):
+class UsersRepository(AbstractRepository[UserEntity], ABC):
     """
     An interface for work with User, that is used by UserUnitOfWork.
     The main goal is that implementations of this interface can be easily replaced in UserUnitOfWork

@@ -4,10 +4,10 @@ from sqlalchemy import Result, select, delete, Row, RowMapping, insert, update
 
 from app.domain.entities.user import UserEntity
 from app.infrastructure.repositories.base import SQLAlchemyAbstractRepository
-from app.infrastructure.repositories.user.base import UserRepository
+from app.infrastructure.repositories.users.base import UsersRepository
 
 
-class SQLAlchemyUserRepository(SQLAlchemyAbstractRepository, UserRepository):
+class SQLAlchemyUsersRepository(SQLAlchemyAbstractRepository, UsersRepository):
 
     @override
     async def get_by_fullname(self, surname: str, name: str, patronymic: str) -> UserEntity | None:
