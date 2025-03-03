@@ -59,6 +59,8 @@ addresses_table = Table(
     Column("city", String(100)),
     Column("street", String(100)),
     Column("postal_code", String(20)),
+    Column("created_at", DateTime, default=func.now()),
+    Column("updated_at", DateTime, default=func.now(), onupdate=func.now())
 )
 
 social_networks_table = Table(
@@ -68,6 +70,8 @@ social_networks_table = Table(
     Column("bio_id", UUID(as_uuid=True), ForeignKey("bios.oid", onupdate='CASCADE', ondelete='CASCADE')),
     Column("platform", String(50), nullable=False),
     Column("url", String(255), nullable=False),
+    Column("created_at", DateTime, default=func.now()),
+    Column("updated_at", DateTime, default=func.now(), onupdate=func.now())
 )
 
 
