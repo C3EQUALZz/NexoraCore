@@ -13,7 +13,7 @@ from typing import (
 T = TypeVar("T", bound=Any)
 
 
-@dataclass(frozen=True)
+@dataclass
 class BaseValueObject(ABC, Generic[T]):
     """
     Base value object, from which any domain value object should be inherited.

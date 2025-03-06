@@ -3,7 +3,8 @@ from app.exceptions.logic import UserAlreadyExistsException, InvalidPasswordExce
 from app.infrastructure.services.users import UsersService
 from app.infrastructure.utils.security import hash_password, validate_password
 from app.logic.handlers.users.base import UsersCommandHandler
-from app.logic.commands.users import CreateUserCommand, VerifyUserCredentialsCommand, UpdateUserCommand
+from app.logic.commands.users import CreateUserCommand, VerifyUserCredentialsCommand, UpdateUserCommand, \
+    DeleteUserCommand
 from app.domain.entities.user import UserEntity
 from app.domain.values.user import Password
 
@@ -41,8 +42,19 @@ class UpdateUserCommandHandler(UsersCommandHandler[UpdateUserCommand]):
 
         updated_user = UserEntity(**await command.to_dict())
         updated_user.oid = user.oid
+        updated_user.password = Password(hash_password(command.password))
 
         return await user_service.update(updated_user)
+
+
+class DeleteUserCommandHandler(UsersCommandHandler[DeleteUserCommand]):
+    async def __call__(self, command: UpdateUserCommand) -> None:
+        user_service: UsersService = UsersService(uow=self._uow)
+
+        if not await user_service.check_existence(oid=command.oid):
+            raise UserNotFoundException(command.oid)
+
+        return await user_service.delete(oid=command.oid)
 
 
 class VerifyUserCredentialsCommandHandler(UsersCommandHandler[VerifyUserCredentialsCommand]):
@@ -50,7 +62,6 @@ class VerifyUserCredentialsCommandHandler(UsersCommandHandler[VerifyUserCredenti
         """
         Checks, if provided by user credentials are valid.
         """
-
         users_service: UsersService = UsersService(uow=self._uow)
 
         user: UserEntity

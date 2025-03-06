@@ -5,7 +5,7 @@ from typing import override
 from app.exceptions.domain import UnExistingPlatform
 
 
-@dataclass(frozen=True)
+@dataclass
 class Platform(BaseValueObject[str]):
     value: str
 

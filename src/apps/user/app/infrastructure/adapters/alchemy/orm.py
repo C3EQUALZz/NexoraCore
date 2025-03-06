@@ -5,21 +5,7 @@ from sqlalchemy.sql import func
 
 from app.infrastructure.adapters.alchemy.metadata import metadata, mapper_registry
 from app.infrastructure.adapters.alchemy.type_decorators import PhoneNumberTypeDecorator, EmailTypeDecorator, \
-    PasswordTypeDecorator, GenderTypeDecorator, URLTypeDecorator
-
-roles_table = Table(
-    "roles",
-    metadata,
-    Column("id", UUID(as_uuid=True), primary_key=True),
-    Column("name", String(50), nullable=False, unique=True)
-)
-
-statuses_table = Table(
-    "statuses",
-    metadata,
-    Column("id", UUID(as_uuid=True), primary_key=True),
-    Column("name", String(50), nullable=False, unique=True)
-)
+    PasswordTypeDecorator, GenderTypeDecorator, URLTypeDecorator, StatusDecorator, RoleDecorator
 
 users_table = Table(
     "users",
@@ -30,12 +16,10 @@ users_table = Table(
     Column("patronymic", String(100)),
     Column("email", EmailTypeDecorator(100), nullable=False, unique=True),
     Column("password", PasswordTypeDecorator(50), nullable=False),
-    Column("role_id", UUID(as_uuid=True), ForeignKey("roles.id", onupdate='CASCADE', ondelete='CASCADE'),
-           nullable=False),
-    Column("status_id", UUID(as_uuid=True), ForeignKey("statuses.id", onupdate='CASCADE', ondelete='CASCADE'),
-           nullable=False),
-    Column("created_at", DateTime, default=func.now()),
-    Column("updated_at", DateTime, default=func.now(), onupdate=func.now()),
+    Column("role", RoleDecorator(5), nullable=False),
+    Column("status", StatusDecorator(10), nullable=False),
+    Column("created_at", DateTime(timezone=True), default=func.now()),
+    Column("updated_at", DateTime(timezone=True), default=func.now(), onupdate=func.now()),
 )
 
 bios_table = Table(
@@ -46,8 +30,8 @@ bios_table = Table(
     Column("phone_number", PhoneNumberTypeDecorator(16)),
     Column("photo", URLTypeDecorator(255)),
     Column("gender", GenderTypeDecorator(10)),
-    Column("created_at", DateTime, default=func.now()),
-    Column("updated_at", DateTime, default=func.now(), onupdate=func.now()),
+    Column("created_at", DateTime(timezone=True), default=func.now()),
+    Column("updated_at", DateTime(timezone=True), default=func.now(), onupdate=func.now()),
 )
 
 addresses_table = Table(
@@ -59,8 +43,8 @@ addresses_table = Table(
     Column("city", String(100)),
     Column("street", String(100)),
     Column("postal_code", String(20)),
-    Column("created_at", DateTime, default=func.now()),
-    Column("updated_at", DateTime, default=func.now(), onupdate=func.now())
+    Column("created_at", DateTime(timezone=True), default=func.now()),
+    Column("updated_at", DateTime(timezone=True), default=func.now(), onupdate=func.now())
 )
 
 social_networks_table = Table(
@@ -70,8 +54,8 @@ social_networks_table = Table(
     Column("bio_id", UUID(as_uuid=True), ForeignKey("bios.oid", onupdate='CASCADE', ondelete='CASCADE')),
     Column("platform_id", UUID(as_uuid=True), ForeignKey("platforms.id"), nullable=False),
     Column("url", String(255), nullable=False),
-    Column("created_at", DateTime, default=func.now()),
-    Column("updated_at", DateTime, default=func.now(), onupdate=func.now())
+    Column("created_at", DateTime(timezone=True), default=func.now()),
+    Column("updated_at", DateTime(timezone=True), default=func.now(), onupdate=func.now())
 )
 
 platforms_table = Table(
@@ -91,25 +75,7 @@ def start_mappers() -> None:
     from app.domain.entities.bio import BioEntity
     from app.domain.entities.address import AddressEntity
     from app.domain.entities.social_network import SocialNetworkEntity
-    from app.domain.values.user import Role
-    from app.domain.values.user import Status
     from app.domain.values.social_network import Platform
-
-    mapper_registry.map_imperatively(
-        class_=Role,
-        local_table=roles_table,
-        properties={
-            "value": roles_table.c.name
-        }
-    )
-
-    mapper_registry.map_imperatively(
-        class_=Status,
-        local_table=statuses_table,
-        properties={
-            "value": statuses_table.c.name
-        }
-    )
 
     mapper_registry.map_imperatively(
         class_=AddressEntity,
@@ -123,7 +89,7 @@ def start_mappers() -> None:
         class_=UserEntity,
         local_table=users_table,
         properties={
-            "oid": users_table.c.oid
+            "oid": users_table.c.oid,
         }
     )
 

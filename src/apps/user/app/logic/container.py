@@ -18,9 +18,10 @@ from sqlalchemy.ext.asyncio import (
 
 from app.infrastructure.uow.users.alchemy import SQLAlchemyUsersUnitOfWork
 from app.infrastructure.uow.users.base import UsersUnitOfWork
-from app.logic.commands.users import CreateUserCommand, UpdateUserCommand, VerifyUserCredentialsCommand
+from app.logic.commands.users import CreateUserCommand, UpdateUserCommand, VerifyUserCredentialsCommand, \
+    DeleteUserCommand
 from app.logic.handlers.users.commands import CreateUserCommandHandler, UpdateUserCommandHandler, \
-    VerifyUserCredentialsCommandHandler
+    VerifyUserCredentialsCommandHandler, DeleteUserCommandHandler
 from app.logic.types.handlers import CommandHandlerMapping, EventHandlerMapping
 from app.settings.config import Settings
 
@@ -39,6 +40,7 @@ class HandlerProvider(Provider):
                 CreateUserCommand: CreateUserCommandHandler,
                 UpdateUserCommand: UpdateUserCommandHandler,
                 VerifyUserCredentialsCommand: VerifyUserCredentialsCommandHandler,
+                DeleteUserCommand: DeleteUserCommandHandler,
             },
         )
 

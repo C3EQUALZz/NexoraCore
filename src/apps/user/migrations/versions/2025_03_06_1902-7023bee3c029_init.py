@@ -1,25 +1,19 @@
-"""empty message
+"""init
 
-Revision ID: dd5678e3ecf6
+Revision ID: 7023bee3c029
 Revises: 
-Create Date: 2025-03-06 10:02:11.042693
+Create Date: 2025-03-06 19:02:44.059360
 
 """
 from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-from app.infrastructure.adapters.alchemy.type_decorators import (
-    EmailTypeDecorator,
-    PasswordTypeDecorator,
-    PhoneNumberTypeDecorator,
-    URLTypeDecorator,
-    GenderTypeDecorator
-)
-
+from app.infrastructure.adapters.alchemy.type_decorators import PhoneNumberTypeDecorator, EmailTypeDecorator, \
+    PasswordTypeDecorator, RoleDecorator, StatusDecorator, URLTypeDecorator, GenderTypeDecorator
 
 # revision identifiers, used by Alembic.
-revision: str = 'dd5678e3ecf6'
+revision: str = '7023bee3c029'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -33,18 +27,6 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('name')
     )
-    op.create_table('roles',
-    sa.Column('id', sa.UUID(), nullable=False),
-    sa.Column('name', sa.String(length=50), nullable=False),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('name')
-    )
-    op.create_table('statuses',
-    sa.Column('id', sa.UUID(), nullable=False),
-    sa.Column('name', sa.String(length=50), nullable=False),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('name')
-    )
     op.create_table('users',
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('surname', sa.String(length=100), nullable=True),
@@ -52,12 +34,10 @@ def upgrade() -> None:
     sa.Column('patronymic', sa.String(length=100), nullable=True),
     sa.Column('email', EmailTypeDecorator(length=100), nullable=False),
     sa.Column('password', PasswordTypeDecorator(length=50), nullable=False),
-    sa.Column('role_id', sa.UUID(), nullable=False),
-    sa.Column('status_id', sa.UUID(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['role_id'], ['roles.id'], onupdate='CASCADE', ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['status_id'], ['statuses.id'], onupdate='CASCADE', ondelete='CASCADE'),
+    sa.Column('role', RoleDecorator(length=5), nullable=False),
+    sa.Column('status', StatusDecorator(length=10), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email')
     )
@@ -67,8 +47,8 @@ def upgrade() -> None:
     sa.Column('phone_number', PhoneNumberTypeDecorator(length=16), nullable=True),
     sa.Column('photo', URLTypeDecorator(length=255), nullable=True),
     sa.Column('gender', GenderTypeDecorator(length=10), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('user_id')
@@ -80,8 +60,8 @@ def upgrade() -> None:
     sa.Column('city', sa.String(length=100), nullable=True),
     sa.Column('street', sa.String(length=100), nullable=True),
     sa.Column('postal_code', sa.String(length=20), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.ForeignKeyConstraint(['bio_id'], ['bios.id'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -90,8 +70,8 @@ def upgrade() -> None:
     sa.Column('bio_id', sa.UUID(), nullable=True),
     sa.Column('platform_id', sa.UUID(), nullable=False),
     sa.Column('url', sa.String(length=255), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.ForeignKeyConstraint(['bio_id'], ['bios.id'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['platform_id'], ['platforms.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -105,7 +85,5 @@ def downgrade() -> None:
     op.drop_table('addresses')
     op.drop_table('bios')
     op.drop_table('users')
-    op.drop_table('statuses')
-    op.drop_table('roles')
     op.drop_table('platforms')
     # ### end Alembic commands ###

@@ -4,6 +4,8 @@ from uuid import UUID
 from dishka.integrations.fastapi import DishkaRoute
 from fastapi import APIRouter, status
 
+from app.exceptions.infrastructure import UserNotFoundException
+
 router = APIRouter(prefix="/bios", tags=["bios"], route_class=DishkaRoute)
 logger = logging.getLogger(__name__)
 

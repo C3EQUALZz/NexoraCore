@@ -7,7 +7,7 @@ from app.exceptions.domain import EmptyEmailException, InvalidEmailException, Em
     InvalidPasswordLengthException, RoleException, StatusException
 
 
-@dataclass(frozen=True)
+@dataclass
 class Email(BaseValueObject[str]):
     value: str
 
@@ -26,7 +26,7 @@ class Email(BaseValueObject[str]):
         return str(self.value)
 
 
-@dataclass(frozen=True)
+@dataclass
 class Password(BaseValueObject[bytes]):
     value: bytes
 
@@ -45,7 +45,7 @@ class Password(BaseValueObject[bytes]):
         return self.value
 
 
-@dataclass(frozen=True)
+@dataclass
 class Role(BaseValueObject[str]):
     value: str
 
@@ -59,7 +59,7 @@ class Role(BaseValueObject[str]):
         return str(self.value)
 
 
-@dataclass(frozen=True)
+@dataclass
 class Status(BaseValueObject[str]):
     value: str
 

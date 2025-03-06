@@ -65,6 +65,15 @@ class RedisSettings(CommonSettings):
         return RedisDsn(f"redis://:{self.password}@{self.host}:{self.port}")
 
 
+class AdminSettings(CommonSettings):
+    email: str = Field(alias="ADMIN_EMAIL")
+    surname: str = Field(alias="ADMIN_SURNAME")
+    name: str = Field(alias="ADMIN_NAME")
+    patronymic: str = Field(alias="ADMIN_PATRONYMIC")
+    password: str = Field(alias="ADMIN_PASSWORD")
+    telegram_uri: str = Field(alias="ADMIN_TELEGRAM_URI")
+
+
 class Settings(CommonSettings):
     """
     Класс настроек, которым в дальнейшем будет оперировать приложение.
@@ -73,3 +82,4 @@ class Settings(CommonSettings):
     database: DatabaseSettings = DatabaseSettings()
     alchemy_settings: SQLAlchemySettings = SQLAlchemySettings()
     cache: RedisSettings = RedisSettings()
+    admin: AdminSettings = AdminSettings()

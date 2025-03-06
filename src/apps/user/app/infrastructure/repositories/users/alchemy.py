@@ -3,6 +3,7 @@ from typing import override, Sequence, Any
 from sqlalchemy import Result, select, delete, Row, RowMapping, insert, update
 
 from app.domain.entities.user import UserEntity
+from app.domain.values.user import Email
 from app.infrastructure.repositories.base import SQLAlchemyAbstractRepository
 from app.infrastructure.repositories.users.base import UsersRepository
 
@@ -14,7 +15,8 @@ class SQLAlchemyUsersRepository(SQLAlchemyAbstractRepository, UsersRepository):
         result: Result = await self._session.execute(
             select(UserEntity).filter_by(
                 surname=surname,
-                name=name, patronymic=patronymic
+                name=name,
+                patronymic=patronymic
             )
         )
 
@@ -23,9 +25,7 @@ class SQLAlchemyUsersRepository(SQLAlchemyAbstractRepository, UsersRepository):
     @override
     async def get_by_email(self, email: str) -> UserEntity | None:
         result: Result = await self._session.execute(
-            select(UserEntity).filter_by(
-                email=email
-            )
+            select(UserEntity).filter_by(email=Email(email))
         )
 
         return result.scalar_one_or_none()
@@ -50,7 +50,7 @@ class SQLAlchemyUsersRepository(SQLAlchemyAbstractRepository, UsersRepository):
         result: Result = await self._session.execute(
             update(UserEntity)
             .filter_by(oid=oid)
-            .values(**await model.to_dict(exclude={"id"}))
+            .values(**await model.to_dict(exclude={"oid"}))
             .returning(UserEntity)
         )
 
@@ -58,7 +58,7 @@ class SQLAlchemyUsersRepository(SQLAlchemyAbstractRepository, UsersRepository):
 
     @override
     async def delete(self, oid: str) -> None:
-        await self._session.execute(delete(UserEntity).filter_by(id=id))
+        await self._session.execute(delete(UserEntity).filter_by(oid=oid))
 
     @override
     async def list(self, start: int = 0, limit: int = 10) -> list[UserEntity]:

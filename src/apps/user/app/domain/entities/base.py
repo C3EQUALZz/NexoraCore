@@ -51,12 +51,10 @@ class BaseEntity(ABC):
         include: set of model fields, which should be included into dictionary representation.
         """
 
-        data: Dict[str, Any] = asdict(self)
+        data: Dict[str, Any] = vars(self)
 
-        # Process nested dictionaries
-        for key, value in data.items():
-            if isinstance(value, dict) and "value" in value:
-                data[key] = value["value"]
+        # For sqlalchemy
+        data.pop("_sa_instance_state", None)
 
         # Handle exclude set
         if exclude:

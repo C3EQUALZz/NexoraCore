@@ -6,7 +6,7 @@ from app.domain.values.base import BaseValueObject
 from app.exceptions.domain import URLMalformedException
 
 
-@dataclass(frozen=True)
+@dataclass
 class URL(BaseValueObject[str]):
     value: str
 

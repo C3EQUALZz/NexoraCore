@@ -6,7 +6,7 @@ from app.domain.values.base import BaseValueObject
 from app.exceptions.domain import EmptyGenderException, PhoneNumberException, UnExistingGenderException
 
 
-@dataclass(frozen=True)
+@dataclass
 class Gender(BaseValueObject[str]):
     value: str
 
@@ -23,7 +23,7 @@ class Gender(BaseValueObject[str]):
         return str(self.value)
 
 
-@dataclass(frozen=True)
+@dataclass
 class PhoneNumber(BaseValueObject[str]):
     value: str
 
