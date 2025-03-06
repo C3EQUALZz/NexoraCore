@@ -6,8 +6,9 @@ from typing import (
     Generic,
     List,
     Optional,
-    TypeVar,
+    TypeVar
 )
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.base import BaseEntity

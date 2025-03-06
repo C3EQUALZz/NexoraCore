@@ -13,10 +13,6 @@ from app.application.api.v1.users.handlers import router as user_router
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
-    engine: AsyncEngine = await container.get(AsyncEngine)
-    async with engine.begin() as conn:
-        await conn.run_sync(metadata.create_all)
-
     # cache.pool = await container.get(ConnectionPool)
     # cache.client = await container.get(Redis)
 

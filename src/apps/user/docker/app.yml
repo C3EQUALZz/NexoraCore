@@ -5,7 +5,7 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-    command: "uvicorn --factory app.main:create_app --reload --host 0.0.0.0 --port 8000"
+    command: "alembic upgrade head && uvicorn --factory app.main:create_app --reload --host 0.0.0.0 --port 8000"
     ports:
       - "${API_PORT}:8000"
     env_file:

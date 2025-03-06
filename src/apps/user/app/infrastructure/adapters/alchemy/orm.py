@@ -68,10 +68,17 @@ social_networks_table = Table(
     metadata,
     Column("id", UUID(as_uuid=True), primary_key=True, key="oid"),
     Column("bio_id", UUID(as_uuid=True), ForeignKey("bios.oid", onupdate='CASCADE', ondelete='CASCADE')),
-    Column("platform", String(50), nullable=False),
+    Column("platform_id", UUID(as_uuid=True), ForeignKey("platforms.id"), nullable=False),
     Column("url", String(255), nullable=False),
     Column("created_at", DateTime, default=func.now()),
     Column("updated_at", DateTime, default=func.now(), onupdate=func.now())
+)
+
+platforms_table = Table(
+    "platforms",
+    metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("name", String(50), nullable=False, unique=True)
 )
 
 
@@ -86,6 +93,7 @@ def start_mappers() -> None:
     from app.domain.entities.social_network import SocialNetworkEntity
     from app.domain.values.user import Role
     from app.domain.values.user import Status
+    from app.domain.values.social_network import Platform
 
     mapper_registry.map_imperatively(
         class_=Role,
@@ -127,11 +135,20 @@ def start_mappers() -> None:
             "oid": social_networks_table.c.oid
         }
     )
+
     mapper_registry.map_imperatively(
         class_=BioEntity,
         local_table=bios_table,
         properties={
             "social_networks": relationship(SocialNetworkEntity, back_populates="bio", cascade="all, delete-orphan"),
             "oid": bios_table.c.oid
+        }
+    )
+
+    mapper_registry.map_imperatively(
+        class_=Platform,
+        local_table=platforms_table,
+        properties={
+            "value": platforms_table.c.name,
         }
     )

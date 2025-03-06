@@ -103,3 +103,15 @@ class UnExistingGenderException(DomainException):
     @property
     def message(self) -> str:
         return f"Gender {self.value} does not exist, please choose male or female"
+
+@dataclass(eq=False)
+class UnExistingPlatform(DomainException):
+    value: str
+
+    @property
+    def message(self) -> str:
+        return f"Platform {self.value} does not exist."
+
+    @property
+    def status(self) -> int:
+        return HTTPStatus.NOT_FOUND.value
