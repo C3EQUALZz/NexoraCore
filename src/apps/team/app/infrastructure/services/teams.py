@@ -1,5 +1,5 @@
 from app.domain.entities.team import TeamEntity
-from app.exceptions.infrastructure import TeamNotFoundException
+from app.exceptions.infrastructure import TeamNotFoundException, AttributeException, TeamAlreadyExistsException
 from app.infrastructure.uow.teams.base import TeamsUnitOfWork
 
 
@@ -9,6 +9,9 @@ class TeamsService:
 
     async def add(self, team: TeamEntity) -> TeamEntity:
         async with self._uow as uow:
+            if await self.check_existence(oid=team.oid):
+                raise TeamAlreadyExistsException(team.oid)
+
             new_team: TeamEntity = await uow.teams.add(team)
             await uow.commit()
             return new_team
@@ -19,6 +22,19 @@ class TeamsService:
 
             if not team:
                 raise TeamNotFoundException(name)
+
+            return team
+
+    async def update(self, oid: str, model: TeamEntity) -> TeamEntity:
+        async with self._uow as uow:
+            team: TeamEntity | None = await uow.teams.get(oid)
+
+            if not team:
+                raise TeamNotFoundException(oid)
+
+            team: TeamEntity | None = await uow.teams.update(oid, model)
+
+            await uow.commit()
 
             return team
 
@@ -42,4 +58,29 @@ class TeamsService:
 
             await uow.commit()
 
+    async def get_all(self, start: int = 0, limit: int = 10) -> list[TeamEntity]:
+        async with self._uow as uow:
+            return await uow.teams.list(start=start, limit=limit)
 
+    async def check_existence(
+            self,
+            oid: str | None = None,
+            name: str | None = None,
+    ) -> bool:
+        if not (oid or name):
+            raise AttributeException("Please provide oid or name existence checking")
+
+        async with self._uow as uow:
+            team: TeamEntity | None
+
+            if name:
+                team: TeamEntity | None = await uow.teams.get_by_team_name(name)
+                if team:
+                    return True
+
+            if oid:
+                team: TeamEntity | None = await uow.teams.get(oid)
+                if team:
+                    return True
+
+            return False

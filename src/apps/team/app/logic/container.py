@@ -18,8 +18,12 @@ from sqlalchemy.ext.asyncio import (
 
 from app.infrastructure.uow.teams.alchemy import SQLAlchemyTeamsUnitOfWork
 from app.infrastructure.uow.teams.base import TeamsUnitOfWork
+from app.logic.commands.team import CreateTeamCommand, UpdateTeamCommand, DeleteTeamCommand
 from app.logic.commands.team_members import CreateTeamMemberCommand, UpdateTeamMemberCommand, DeleteTeamMemberCommand
-from app.logic.handlers.team_members.commands import CreateTeamMemberCommandHandler, UpdateTeamMemberCommandHandler, DeleteTeamMemberCommandHandler
+from app.logic.handlers.team_members.commands import CreateTeamMemberCommandHandler, UpdateTeamMemberCommandHandler, \
+    DeleteTeamMemberCommandHandler
+from app.logic.handlers.teams.commands import CreateTeamCommandHandler, UpdateTeamCommandHandler, \
+    DeleteTeamCommandHandler
 from app.logic.types.handlers import CommandHandlerMapping, EventHandlerMapping
 from app.settings.config import Settings
 
@@ -38,6 +42,9 @@ class HandlerProvider(Provider):
                 CreateTeamMemberCommand: CreateTeamMemberCommandHandler,
                 UpdateTeamMemberCommand: UpdateTeamMemberCommandHandler,
                 DeleteTeamMemberCommand: DeleteTeamMemberCommandHandler,
+                CreateTeamCommand: CreateTeamCommandHandler,
+                UpdateTeamCommand: UpdateTeamCommandHandler,
+                DeleteTeamCommand: DeleteTeamCommandHandler,
             },
         )
 

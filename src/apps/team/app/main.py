@@ -3,7 +3,6 @@ from contextlib import asynccontextmanager
 
 from dishka.integrations.fastapi import setup_dishka as setup_dishka_fastapi
 from fastapi import FastAPI
-from fastapi_versioning import VersionedFastAPI
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.orm import clear_mappers
 
@@ -31,15 +30,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 
 def create_app() -> FastAPI:
-    app = VersionedFastAPI(
-        app=FastAPI(
-            title="Microservice backend for teams service",
-            description="Backend API written with FastAPI for teams service",
-            debug=True,
-            lifespan=lifespan,
-        ),
-        version_format="{major}",
-        prefix_format="/api/v{major}/teams",
+    app = FastAPI(
+        title="Microservice backend for teams service",
+        description="Backend API written with FastAPI for teams service",
+        debug=True,
+        root_path="/api/v1/teams",
+        lifespan=lifespan
     )
 
     setup_dishka_fastapi(container=container, app=app)

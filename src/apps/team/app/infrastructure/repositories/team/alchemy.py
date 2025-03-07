@@ -3,6 +3,7 @@ from typing import override, Sequence, Any
 from sqlalchemy import Result, delete, Row, RowMapping, select, update, insert
 
 from app.domain.entities.team import TeamEntity
+from app.domain.values.team import TeamName
 from app.infrastructure.repositories.base import SQLAlchemyAbstractRepository
 from app.infrastructure.repositories.team.base import TeamsRepository
 
@@ -11,7 +12,7 @@ class SQLAlchemyTeamsRepository(SQLAlchemyAbstractRepository, TeamsRepository):
     @override
     async def get_by_team_name(self, name: str) -> TeamEntity | None:
         result: Result = await self._session.execute(
-            select(TeamEntity).filter_by(name=name)
+            select(TeamEntity).filter_by(name=TeamName(name))
         )
 
         return result.scalar_one_or_none()
@@ -19,7 +20,7 @@ class SQLAlchemyTeamsRepository(SQLAlchemyAbstractRepository, TeamsRepository):
     @override
     async def add(self, model: TeamEntity) -> TeamEntity:
         result: Result = await self._session.execute(
-            insert(TeamEntity).values(**await model.to_dict()).returning(TeamEntity)
+            insert(TeamEntity).values(**await model.to_dict(exclude={"members"})).returning(TeamEntity)
         )
         return result.scalar_one()
 
@@ -36,7 +37,7 @@ class SQLAlchemyTeamsRepository(SQLAlchemyAbstractRepository, TeamsRepository):
         result: Result = await self._session.execute(
             update(TeamEntity)
             .filter_by(oid=oid)
-            .values(**await model.to_dict(exclude={"oid"}))
+            .values(**await model.to_dict(exclude={"oid", "members"}))
             .returning(TeamEntity)
         )
 

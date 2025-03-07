@@ -1,4 +1,4 @@
-from sqlalchemy import MetaData, UUID, Index
+from sqlalchemy import MetaData, UUID, Index, DateTime, func
 from sqlalchemy import Table, Column, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import registry, relationship
 
@@ -15,6 +15,8 @@ team_table = Table(
     Column("id", UUID(as_uuid=True), primary_key=True, key="oid"),
     Column("name", TeamNameTypedDecorator(30), unique=True, nullable=False),
     Column("description", TeamDescriptionTypedDecorator, nullable=True),
+    Column("created_at", DateTime(timezone=True), default=func.now()),
+    Column("updated_at", DateTime(timezone=True), default=func.now(), onupdate=func.now()),
 )
 
 # Таблица членов команды
@@ -23,8 +25,10 @@ team_member_table = Table(
     metadata,
     Column("id", UUID(as_uuid=True), primary_key=True, key="oid"),
     Column("user_id", UUID(as_uuid=True), nullable=False),
-    Column("team_id", UUID(as_uuid=True), ForeignKey("teams.id"), nullable=False),
+    Column("team_id", UUID(as_uuid=True), ForeignKey("teams.oid"), nullable=False),
     Column("position", TeamMemberPositionTypedDecorator, nullable=False),
+    Column("created_at", DateTime(timezone=True), default=func.now()),
+    Column("updated_at", DateTime(timezone=True), default=func.now(), onupdate=func.now()),
     UniqueConstraint("user_id", "team_id", name="uq_user_team")
 )
 
@@ -32,8 +36,10 @@ team_member_table = Table(
 team_hierarchy_table = Table(
     "team_hierarchy",
     metadata,
-    Column("superior_id", UUID(as_uuid=True), ForeignKey("team_members.id", ondelete="SET NULL"), nullable=True),
-    Column("subordinate_id", UUID(as_uuid=True), ForeignKey("team_members.id", ondelete="SET NULL"), nullable=True),
+    Column("superior_id", UUID(as_uuid=True), ForeignKey("team_members.oid", ondelete="SET NULL"), nullable=True),
+    Column("subordinate_id", UUID(as_uuid=True), ForeignKey("team_members.oid", ondelete="SET NULL"), nullable=True),
+    Column("created_at", DateTime(timezone=True), default=func.now()),
+    Column("updated_at", DateTime(timezone=True), default=func.now(), onupdate=func.now()),
     UniqueConstraint("superior_id", "subordinate_id", name="uq_team_hierarchy"),
     Index("ix_superior_subordinate", "superior_id", "subordinate_id")
 )
