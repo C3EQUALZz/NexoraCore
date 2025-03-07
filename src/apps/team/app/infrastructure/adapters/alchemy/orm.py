@@ -45,10 +45,10 @@ def start_mappers() -> None:
     according to DDD.
     """
     from app.domain.entities.team_members import TeamMemberEntity
-    from app.domain.entities.team import Team
+    from app.domain.entities.team import TeamEntity
 
     mapper_registry.map_imperatively(
-        Team,
+        TeamEntity,
         team_table,
         properties={
             "members": relationship(TeamMemberEntity, backref="team", lazy="selectin"),

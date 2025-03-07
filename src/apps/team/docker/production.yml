@@ -1,8 +1,8 @@
 services:
   user-service-app-backend:
     restart: unless-stopped
-    container_name: user-service-app-backend
-    image: user-service-app-backend
+    container_name: team-service-app-backend
+    image: team-service-app-backend
     build:
       context: ..
       dockerfile: Dockerfile
@@ -15,7 +15,7 @@ services:
       - postgres
       - redis
     networks:
-      - user-service
+      - team-service
 
   postgres:
     container_name: postgres-app-users
@@ -35,7 +35,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - user-service
+      - team-service
     env_file:
       - ../.env
 
@@ -62,7 +62,7 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - user-service
+      - team-service
     env_file:
       - ../.env
 
@@ -83,7 +83,7 @@ services:
     env_file:
       - ../.env
     networks:
-      - user-service
+      - team-service
 
 volumes:
   postgres_data_users:
@@ -91,5 +91,5 @@ volumes:
   redis_data_users:
 
 networks:
-  user-service:
+  team-service:
     driver: bridge

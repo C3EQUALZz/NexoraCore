@@ -22,3 +22,16 @@ class ConvertingException(InfrastructureException):
     @property
     def message(self) -> str:
         return f"Converting exception in sqlalchemy typedecorator has occurred. {self.value}"
+
+
+@dataclass(eq=False)
+class TeamNotFoundException(InfrastructureException):
+    value: str
+
+    @property
+    def message(self) -> str:
+        return f"Couldn't find user {self.value}"
+
+    @property
+    def status(self) -> int:
+        return HTTPStatus.NOT_FOUND.value

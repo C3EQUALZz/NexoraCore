@@ -1,7 +1,7 @@
 services:
-  user-service-app-backend:
-    container_name: user-service-app-backend
-    image: user-service-app-backend
+  team-service-app-backend:
+    container_name: team-service
+    image: team-service
     build:
       context: ..
       dockerfile: Dockerfile
@@ -11,8 +11,8 @@ services:
     env_file:
       - ../.env
     networks:
-      - user-service
+      - team-service
 
 networks:
-  user-service:
+  team-service:
     driver: bridge

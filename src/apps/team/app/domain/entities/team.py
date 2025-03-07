@@ -6,7 +6,7 @@ from app.domain.values.team import TeamName, TeamDescription
 
 
 @dataclass(eq=False)
-class Team(BaseEntity):
+class TeamEntity(BaseEntity):
     name: TeamName
     description: TeamDescription
     members: list[TeamMemberEntity] = field(default_factory=list)
