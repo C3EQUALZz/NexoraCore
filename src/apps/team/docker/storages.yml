@@ -1,28 +1,29 @@
 services:
-  postgres:
-    image: postgres:16.3-alpine
-    container_name: postgres-app-teams
+  mongo:
+    container_name: mongodb-app-teams
+    image: mongo:7.0.0-jammy
     restart: "no"
-    ports:
-      - "${DATABASE_PORT}:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER: ${DATABASE_USER}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
-      POSTGRES_DB: ${DATABASE_NAME}
+      MONGO_INITDB_DATABASE: ${DATABASE_NAME}
+      MONGO_INITDB_ROOT_USERNAME: ${DATABASE_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${DATABASE_PASSWORD}
+    ports:
+      - "${DATABASE_PORT}:27017"
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
-      interval: 10s
+      test: [ "CMD","mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 5s
       timeout: 5s
-      retries: 5
-    networks:
-      - team-service
+      retries: 3
+      start_period: 5s
+    volumes:
+      - mongodb_data:/data/db
     env_file:
       - ../.env
+    networks:
+      - team-service
 
 volumes:
-  postgres_data:
+  mongodb_data:
 
 networks:
   team-service:

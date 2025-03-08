@@ -1,4 +1,6 @@
 import inspect
+import logging
+
 from types import MappingProxyType
 from typing import (
     Any,
@@ -23,6 +25,7 @@ from app.logic.handlers.base import (
 )
 from app.logic.message_bus import MessageBus
 
+logger = logging.getLogger(__name__)
 
 class Bootstrap:
     """
@@ -76,4 +79,5 @@ class Bootstrap:
         handler_dependencies: Dict[str, Any] = {
             name: dependency for name, dependency in self._dependencies.items() if name in params
         }
+
         return handler(**handler_dependencies)

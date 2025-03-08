@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from app.logic.commands.base import AbstractCommand
 
@@ -6,9 +6,10 @@ from app.logic.commands.base import AbstractCommand
 @dataclass(frozen=True)
 class CreateTeamMemberCommand(AbstractCommand):
     user_id: str
+    team_id: str
     position: str
-    superiors: list[str] = field(default_factory=list)
-    subordinates: list[str] = field(default_factory=list)
+    superiors: list[str]
+    subordinates: list[str]
 
 
 @dataclass(frozen=True)
@@ -16,8 +17,8 @@ class UpdateTeamMemberCommand(AbstractCommand):
     oid: str
     user_id: str
     position: str
-    superiors: list[str] = field(default_factory=list)
-    subordinates: list[str] = field(default_factory=list)
+    superiors: list[str]
+    subordinates: list[str]
 
 
 @dataclass(frozen=True)

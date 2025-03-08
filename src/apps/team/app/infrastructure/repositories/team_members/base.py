@@ -31,5 +31,9 @@ class TeamMembersRepository(AbstractRepository[TeamMemberEntity], ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def is_exists_in_team(self, user_id: str, team_id: str) -> bool:
+        raise NotImplementedError
+
+    @abstractmethod
     async def list(self, start: int = 0, limit: int = 10) -> list[TeamMemberEntity]:
         raise NotImplementedError

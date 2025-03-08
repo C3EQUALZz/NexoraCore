@@ -5,12 +5,16 @@ from abc import (
 from collections.abc import Generator
 from traceback import TracebackException
 from typing import (
+    Any,
+    Optional,
     Self,
+    Type,
 )
 
-from sqlalchemy.ext.asyncio import (
-    AsyncSession,
-    async_sessionmaker,
+from motor.motor_asyncio import (
+    AsyncIOMotorClient,
+    AsyncIOMotorClientSession,
+    AsyncIOMotorDatabase,
 )
 
 from app.logic.events.base import AbstractEvent
@@ -28,10 +32,10 @@ class AbstractUnitOfWork(ABC):
         return self
 
     async def __aexit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_value: BaseException | None,
-        traceback: TracebackException | None,
+            self,
+            exc_type: type[BaseException] | None,
+            exc_value: BaseException | None,
+            traceback: TracebackException | None,
     ) -> None:
         await self.rollback()
 
@@ -56,43 +60,53 @@ class AbstractUnitOfWork(ABC):
             yield self._events.pop(0)
 
 
-class SQLAlchemyAbstractUnitOfWork(AbstractUnitOfWork):
+class MotorAbstractUnitOfWork(AbstractUnitOfWork):
     """
-    Unit of work interface for SQLAlchemy, from which should be inherited all other units of work,
-    which would be based on SQLAlchemy logics.
+    Unit of work interface for MongoDB using Motor with transaction support.
     """
 
-    def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
+    def __init__(self, client: AsyncIOMotorClient[Any], database_name: str) -> None:
         super().__init__()
-        self._session_factory = session_factory
+        self._client = client
+        self._database_name = database_name
+
+        self._database: Optional[AsyncIOMotorDatabase[Any]] = None
+        self._session: Optional[AsyncIOMotorClientSession] = None
 
     async def __aenter__(self) -> Self:
-        self._session: AsyncSession = self._session_factory()
+        """
+        Initializes the database and starts a session for transactions.
+        """
+        self._database = self._client[self._database_name]
+        self._session = await self._client.start_session()
+        self._session.start_transaction()
         return await super().__aenter__()
 
     async def __aexit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_value: BaseException | None,
-        traceback: TracebackException | None,
+            self,
+            exc_type: Optional[Type[BaseException]],
+            exc_value: Optional[BaseException],
+            traceback: Optional[TracebackException],
     ) -> None:
-        await super().__aexit__(exc_type, exc_value, traceback)
-        await self._session.close()
+        """
+        Commits or aborts the transaction based on whether an exception occurred.
+        """
+        if self._session and bool(self._session.in_transaction):
+            await super().__aexit__(exc_type, exc_value, traceback)
+
+        if self._session is not None:
+            await self._session.end_session()
 
     async def commit(self) -> None:
-        await self._session.commit()
+        """
+        Commits the transaction.
+        """
+        if self._session and bool(self._session.in_transaction):
+            await self._session.commit_transaction()
 
     async def rollback(self) -> None:
         """
-        Rollbacks all uncommited changes.
-
-        Uses self._session.expunge_all() to avoid sqlalchemy.orm.exc.DetachedInstanceError after session rollback,
-        due to the fact that selected object is cached by Session. And self._session.rollback() deletes all Session
-        cache, which causes error on Domain model, which is not bound now to the session and can not retrieve
-        attributes.
-
-        https://pythonhint.com/post/1123713161982291/how-does-a-sqlalchemy-object-get-detached
+        Aborts the transaction.
         """
-
-        self._session.expunge_all()
-        await self._session.rollback()
+        if self._session and bool(self._session.in_transaction):
+            await self._session.abort_transaction()

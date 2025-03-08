@@ -1,5 +1,5 @@
 import logging
-from typing import cast
+from typing import cast, Any
 
 from dishka import (
     Provider,
@@ -8,16 +8,10 @@ from dishka import (
     make_async_container,
     provide,
 )
+from motor.motor_asyncio import AsyncIOMotorClient
 
-from sqlalchemy.ext.asyncio import (
-    AsyncEngine,
-    AsyncSession,
-    async_sessionmaker,
-    create_async_engine,
-)
-
-from app.infrastructure.uow.teams.alchemy import SQLAlchemyTeamsUnitOfWork
 from app.infrastructure.uow.teams.base import TeamsUnitOfWork
+from app.infrastructure.uow.teams.mongo import MotorTeamsUnitOfWork
 from app.logic.commands.team import CreateTeamCommand, UpdateTeamCommand, DeleteTeamCommand
 from app.logic.commands.team_members import CreateTeamMemberCommand, UpdateTeamMemberCommand, DeleteTeamMemberCommand
 from app.logic.handlers.team_members.commands import CreateTeamMemberCommandHandler, UpdateTeamMemberCommandHandler, \
@@ -60,31 +54,17 @@ class DatabaseProvider(Provider):
     settings = from_context(provides=Settings, scope=Scope.APP)
 
     @provide(scope=Scope.APP)
-    async def get_engine_client(self, settings: Settings) -> AsyncEngine:
-        engine: AsyncEngine = create_async_engine(
-            url=settings.database.url,
-            pool_pre_ping=settings.alchemy_settings.pool_pre_ping,
-            pool_recycle=settings.alchemy_settings.pool_recycle,
-            echo=settings.alchemy_settings.echo,
-        )
+    async def get_motor_client(self, settings: Settings) -> AsyncIOMotorClient[Any]:
+        client: AsyncIOMotorClient[Any] = AsyncIOMotorClient(str(settings.database.url))
 
-        logger.debug("Successfully connected to Database")
+        if info := await client.server_info():
+            logger.debug("Successfully connected to MongoDB, info [%s]", info)
 
-        return engine
+        return client
 
     @provide(scope=Scope.APP)
-    async def get_session_maker(self, engine: AsyncEngine, settings: Settings) -> async_sessionmaker[AsyncSession]:
-        session_maker: async_sessionmaker[AsyncSession] = async_sessionmaker(
-            bind=engine,
-            autoflush=settings.alchemy_settings.auto_flush,
-            expire_on_commit=settings.alchemy_settings.expire_on_commit,
-        )
-
-        return session_maker
-
-    @provide(scope=Scope.APP)
-    async def get_teams_uow(self, session_maker: async_sessionmaker[AsyncSession]) -> TeamsUnitOfWork:
-        return SQLAlchemyTeamsUnitOfWork(session_factory=session_maker)
+    async def get_teams_motor_uow(self, settings: Settings, client: AsyncIOMotorClient[Any]) -> TeamsUnitOfWork:
+        return MotorTeamsUnitOfWork(client=client, database_name=settings.database.name)
 
 
 container = make_async_container(

@@ -1,15 +1,22 @@
+from abc import ABC
 from abc import (
-    ABC,
     abstractmethod,
+)
+from typing import (
+    Any,
+    Dict,
+    Optional,
 )
 from typing import (
     Generic,
     List,
-    Optional,
     TypeVar
 )
 
-from sqlalchemy.ext.asyncio import AsyncSession
+from motor.motor_asyncio import (
+    AsyncIOMotorClientSession,
+    AsyncIOMotorCollection,
+)
 
 from app.domain.entities.base import BaseEntity
 
@@ -45,11 +52,11 @@ class AbstractRepository(ABC, Generic[BaseEntityType]):
         raise NotImplementedError
 
 
-class SQLAlchemyAbstractRepository(AbstractRepository, ABC):
-    """
-    Repository interface for SQLAlchemy, from which should be inherited all other repositories,
-    which would be based on SQLAlchemy logics.
-    """
-
-    def __init__(self, session: AsyncSession) -> None:
-        self._session: AsyncSession = session
+class MotorAbstractRepository(AbstractRepository, ABC):
+    def __init__(
+            self,
+            collection: AsyncIOMotorCollection[Dict[str, Any]],
+            session: Optional[AsyncIOMotorClientSession],
+    ) -> None:
+        self._collection = collection
+        self._session = session

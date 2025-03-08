@@ -30,7 +30,7 @@ class TeamNotFoundException(InfrastructureException):
 
     @property
     def message(self) -> str:
-        return f"Couldn't find user {self.value}"
+        return f"Couldn't find team {self.value}"
 
     @property
     def status(self) -> int:
@@ -61,3 +61,28 @@ class TeamAlreadyExistsException(InfrastructureException):
     @property
     def status(self) -> int:
         return HTTPStatus.CONFLICT.value
+
+
+@dataclass(eq=False)
+class PersonAlreadyExistsInTeamException(InfrastructureException):
+    team: str
+    team_member: str
+
+    @property
+    def message(self) -> str:
+        return f"Person {self.team_member} already exists in team {self.team}"
+
+    @property
+    def status(self) -> int:
+        return HTTPStatus.CONFLICT.value
+
+
+@dataclass(eq=False)
+class PersonDoesntExistsException(InfrastructureException):
+    person_id: str
+    team_id: str
+
+    @property
+    def message(self) -> str:
+        return f"Person with oid: {self.person_id} doesn't exists in this team: {self.team_id}"
+

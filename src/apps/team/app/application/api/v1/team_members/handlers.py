@@ -1,7 +1,22 @@
-from fastapi import APIRouter
+import logging
+from uuid import UUID
+
+from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
+from fastapi import APIRouter, HTTPException, Query
+
+from app.application.api.v1.team_members.schemas import CreateTeamMemberSchema
+from app.domain.entities.team_members import TeamMemberEntity
+from app.exceptions.base import ApplicationException
+from app.infrastructure.uow.teams.base import TeamsUnitOfWork
+from app.logic.bootstrap import Bootstrap
+from app.logic.commands.team_members import CreateTeamMemberCommand
+from app.logic.message_bus import MessageBus
+from app.logic.types.handlers import EventHandlerMapping, CommandHandlerMapping
+from app.logic.views.team_members import TeamMembersView
 
 router = APIRouter(prefix="/{team_id}/members", tags=["team_members"], route_class=DishkaRoute)
+logger = logging.getLogger(__name__)
 
 
 @router.post(
@@ -9,17 +24,52 @@ router = APIRouter(prefix="/{team_id}/members", tags=["team_members"], route_cla
     status_code=201,
     description="Add user to the team",
 )
-async def create_team_member():
-    ...
+async def create_team_member(
+        team_id: UUID,
+        schema: CreateTeamMemberSchema,
+        uow: FromDishka[TeamsUnitOfWork],
+        events: FromDishka[EventHandlerMapping],
+        commands: FromDishka[CommandHandlerMapping]
+):
+    try:
+        bootstrap: Bootstrap = Bootstrap(
+            uow=uow,
+            events_handlers_for_injection=events,
+            commands_handlers_for_injection=commands,
+        )
+
+        messagebus: MessageBus = await bootstrap.get_messagebus()
+
+        await messagebus.handle(CreateTeamMemberCommand(**{"team_id": team_id, **schema.model_dump()}))
+
+        return messagebus.command_result
+
+    except ApplicationException as e:
+        logger.error(e)
+        raise HTTPException(status_code=e.status, detail=str(e.message))
 
 
 @router.get(
     "/",
     status_code=200,
-    description="Get all team members",
+    description="Get all members in team",
 )
-async def get_all_team_members():
-    ...
+async def get_all_team_members(
+        team_id: UUID,
+        uow: FromDishka[TeamsUnitOfWork],
+        page_number: int = Query(1, ge=1, description="Number of page"),
+        page_size: int = Query(10, ge=1, description="Size of page")
+):
+    try:
+        team_members_view: TeamMembersView = TeamMembersView(uow=uow)
+        all_team_members: list[TeamMemberEntity] = await team_members_view.get_all_team_members(
+            page_number,
+            page_size
+        )
+        return all_team_members
+    except ApplicationException as e:
+        logger.error(e)
+        raise HTTPException(status_code=e.status, detail=str(e.message))
 
 
 @router.delete(

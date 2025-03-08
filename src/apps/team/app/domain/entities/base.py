@@ -1,7 +1,7 @@
 from abc import ABC
 from dataclasses import (
     dataclass,
-    field,
+    field, asdict,
 )
 from datetime import datetime, UTC
 from typing import (
@@ -26,7 +26,8 @@ class BaseEntity(ABC):
     async def to_dict(
             self,
             exclude: Optional[Set[str]] = None,
-            include: Optional[Dict[str, Any]] = None
+            include: Optional[Dict[str, Any]] = None,
+            save_classes_value_objects: bool = False,
     ) -> Dict[str, Any]:
         """
         Create a dictionary representation of the entity.
@@ -35,7 +36,14 @@ class BaseEntity(ABC):
         include: set of model fields, which should be included into dictionary representation.
         """
 
-        data: Dict[str, Any] = vars(self)
+        if save_classes_value_objects:
+            data: Dict[str, Any] = vars(self)
+        else:
+            data: Dict[str, Any] = asdict(self)
+
+            for key, value in data.items():
+                if isinstance(value, dict) and "value" in value:
+                    data[key] = value["value"]
 
         # For sqlalchemy
         data.pop("_sa_instance_state", None)

@@ -32,27 +32,10 @@ class DatabaseSettings(CommonSettings):
     user: str | None = Field(alias="DATABASE_USER", default=None)
     password: str | None = Field(alias="DATABASE_PASSWORD", default=None)
     name: str = Field(alias="DATABASE_NAME")
-    dialect: str = Field(alias="DATABASE_DIALECT")
-    driver: str = Field(alias="DATABASE_DRIVER")
 
     @property
     def url(self) -> str:
-        if self.dialect == "sqlite":
-            return f"{self.dialect}+{self.driver}:///{self.name}"
-
-        return f"{self.dialect}+{self.driver}://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
-
-
-class SQLAlchemySettings(CommonSettings):
-    """
-    Настройки SQLAlchemy, полученные из env.
-    """
-
-    pool_pre_ping: bool = Field(alias="DATABASE_POOL_PRE_PING")
-    pool_recycle: int = Field(alias="DATABASE_POOL_RECYCLE")
-    echo: bool = Field(alias="DATABASE_ECHO")
-    auto_flush: bool = Field(alias="DATABASE_AUTO_FLUSH")
-    expire_on_commit: bool = Field(alias="DATABASE_EXPIRE_ON_COMMIT")
+        return f"mongodb://{self.user}:{self.password}@{self.host}:{self.port}/"
 
 
 class RedisSettings(CommonSettings):
@@ -80,6 +63,5 @@ class Settings(CommonSettings):
     """
 
     database: DatabaseSettings = DatabaseSettings()
-    alchemy_settings: SQLAlchemySettings = SQLAlchemySettings()
     cache: RedisSettings = RedisSettings()
     admin: AdminSettings = AdminSettings()
