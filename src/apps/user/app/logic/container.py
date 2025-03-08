@@ -20,8 +20,10 @@ from app.infrastructure.uow.users.alchemy import SQLAlchemyUsersUnitOfWork
 from app.infrastructure.uow.users.base import UsersUnitOfWork
 from app.logic.commands.users import CreateUserCommand, UpdateUserCommand, VerifyUserCredentialsCommand, \
     DeleteUserCommand
+from app.logic.events.users import UserDeleteEvent
 from app.logic.handlers.users.commands import CreateUserCommandHandler, UpdateUserCommandHandler, \
     VerifyUserCredentialsCommandHandler, DeleteUserCommandHandler
+from app.logic.handlers.users.events import UserDeleteEventHandler
 from app.logic.types.handlers import CommandHandlerMapping, EventHandlerMapping
 from app.settings.config import Settings
 
@@ -49,7 +51,12 @@ class HandlerProvider(Provider):
         """
         Here you have to link events and event handlers for future inject in Bootstrap
         """
-        return cast(EventHandlerMapping, {})
+        return cast(
+            EventHandlerMapping,
+            {
+                UserDeleteEvent: UserDeleteEventHandler
+            }
+        )
 
 
 class DatabaseProvider(Provider):

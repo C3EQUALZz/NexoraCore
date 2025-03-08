@@ -73,6 +73,9 @@ class AdminSettings(CommonSettings):
     password: str = Field(alias="ADMIN_PASSWORD")
     telegram_uri: str = Field(alias="ADMIN_TELEGRAM_URI")
 
+class BrokerProvider(CommonSettings):
+    host: str = Field(alias="BROKER_HOST")
+
 
 class Settings(CommonSettings):
     """
@@ -83,3 +86,4 @@ class Settings(CommonSettings):
     alchemy_settings: SQLAlchemySettings = SQLAlchemySettings()
     cache: RedisSettings = RedisSettings()
     admin: AdminSettings = AdminSettings()
+    broker: BrokerProvider = BrokerProvider()
