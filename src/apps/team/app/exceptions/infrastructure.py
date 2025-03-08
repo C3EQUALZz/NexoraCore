@@ -64,13 +64,13 @@ class TeamAlreadyExistsException(InfrastructureException):
 
 
 @dataclass(eq=False)
-class PersonAlreadyExistsInTeamException(InfrastructureException):
-    team: str
-    team_member: str
+class UserAlreadyExistsInTeamException(InfrastructureException):
+    team_id: str
+    user_id: str
 
     @property
     def message(self) -> str:
-        return f"Person {self.team_member} already exists in team {self.team}"
+        return f"Person {self.user_id} already exists in team {self.team_id}"
 
     @property
     def status(self) -> int:
@@ -78,11 +78,11 @@ class PersonAlreadyExistsInTeamException(InfrastructureException):
 
 
 @dataclass(eq=False)
-class PersonDoesntExistsException(InfrastructureException):
-    person_id: str
+class UserDoesntExistsInThisTeamException(InfrastructureException):
+    user_id: str
     team_id: str
 
     @property
     def message(self) -> str:
-        return f"Person with oid: {self.person_id} doesn't exists in this team: {self.team_id}"
+        return f"Person with oid: {self.user_id} doesn't exists in this team: {self.team_id}"
 

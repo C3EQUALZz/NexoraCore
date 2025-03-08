@@ -1,3 +1,4 @@
+import builtins
 from abc import (
     ABC,
     abstractmethod,
@@ -15,7 +16,7 @@ class TeamMembersRepository(AbstractRepository[TeamMemberEntity], ABC):
     """
 
     @abstractmethod
-    async def get_by_user_id(self, user_id: str) -> TeamMemberEntity | None:
+    async def get_by_user_id(self, team_id: str, user_id: str) -> TeamMemberEntity | None:
         raise NotImplementedError
 
     @abstractmethod
@@ -36,4 +37,17 @@ class TeamMembersRepository(AbstractRepository[TeamMemberEntity], ABC):
 
     @abstractmethod
     async def list(self, start: int = 0, limit: int = 10) -> list[TeamMemberEntity]:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def delete_by_user_id_and_team_id(self, user_id: str, team_id: str) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_all_members_in_team(
+            self,
+            team_id: str,
+            start: int = 0,
+            limit: int = 10
+    ) -> builtins.list[TeamMemberEntity]:
         raise NotImplementedError

@@ -23,4 +23,5 @@ class UpdateTeamMemberCommand(AbstractCommand):
 
 @dataclass(frozen=True)
 class DeleteTeamMemberCommand(AbstractCommand):
-    oid: str
+    user_id: str
+    team_id: str
