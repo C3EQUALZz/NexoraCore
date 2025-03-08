@@ -24,7 +24,7 @@ class MotorTeamsRepository(TeamsRepository, MotorAbstractRepository):
 
     @override
     async def update(self, oid: str, model: TeamEntity) -> TeamEntity:
-        update_data = model.to_dict()
+        update_data = await model.to_dict()
         await self._collection.update_one({"oid": oid}, {"$set": update_data})
         return model
 

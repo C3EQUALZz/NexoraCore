@@ -87,6 +87,7 @@ async def get_team(
     description="Handler for updating info about team",
 )
 async def update_team(
+        oid: UUID,
         schema: UpdateTeamSchemaRequest,
         uow: FromDishka[TeamsUnitOfWork],
         events: FromDishka[EventHandlerMapping],
@@ -99,7 +100,7 @@ async def update_team(
 
         messagebus: MessageBus = await bootstrap.get_messagebus()
 
-        await messagebus.handle(UpdateTeamCommand(**schema.model_dump()))
+        await messagebus.handle(UpdateTeamCommand(**{"oid": str(oid), **schema.model_dump()}))
 
         return TeamResponse.from_entity(messagebus.command_result)
 

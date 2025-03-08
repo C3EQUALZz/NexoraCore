@@ -56,7 +56,7 @@ class TeamAlreadyExistsException(InfrastructureException):
 
     @property
     def message(self) -> str:
-        return f"TEAM ALREADY EXISTS! {self.value}"
+        return f"Provided team name already exists: {self.value}, please choose another name"
 
     @property
     def status(self) -> int:

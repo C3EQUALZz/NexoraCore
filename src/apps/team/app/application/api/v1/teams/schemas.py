@@ -11,7 +11,6 @@ class CreateTeamSchemaRequest(BaseModel):
     description: str = Field(min_length=1, max_length=500)
 
 class UpdateTeamSchemaRequest(BaseModel):
-    oid: UUID4 | Annotated[str, AfterValidator(lambda x: uuid.UUID(x, version=4))]
     name: str = Field(min_length=1, max_length=50)
     description: str = Field(min_length=1, max_length=500)
 

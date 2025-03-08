@@ -9,8 +9,8 @@ class TeamsService:
 
     async def add(self, team: TeamEntity) -> TeamEntity:
         async with self._uow as uow:
-            if await self.check_existence(oid=team.oid):
-                raise TeamAlreadyExistsException(team.oid)
+            if await self.check_existence(name=team.name.as_generic_type()):
+                raise TeamAlreadyExistsException(team.name.as_generic_type())
 
             new_team: TeamEntity = await uow.teams.add(team)
             await uow.commit()
