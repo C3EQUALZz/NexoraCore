@@ -7,6 +7,8 @@ from typing import (
     Any,
 )
 
+import orjson
+
 
 @dataclass(frozen=True)
 class AbstractEvent(ABC):
@@ -15,7 +17,7 @@ class AbstractEvent(ABC):
     Events represents internal operations, which may be executed.
     """
 
-    def to_dict(self, exclude: set[str] | None = None, include: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def to_dict(self, exclude: set[str] | None = None, include: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Create a dictionary representation of the model.
 
@@ -35,3 +37,6 @@ class AbstractEvent(ABC):
             data.update(include)
 
         return data
+
+    async def to_broker_message(self, exclude: set[str] | None = None, include: dict[str, Any] | None = None) -> bytes:
+        return orjson.dumps(await self.to_dict(exclude=exclude, include=include))

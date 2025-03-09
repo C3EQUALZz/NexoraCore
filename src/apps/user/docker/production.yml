@@ -16,6 +16,7 @@ services:
       - redis
     networks:
       - user-service
+      - microservices-network
 
   postgres:
     container_name: postgres-app-users
@@ -93,3 +94,5 @@ volumes:
 networks:
   user-service:
     driver: bridge
+  microservices-network:
+    external: true

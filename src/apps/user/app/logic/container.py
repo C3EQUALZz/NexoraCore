@@ -1,6 +1,7 @@
 import logging
 from typing import cast
 
+from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
 from dishka import (
     Provider,
     Scope,
@@ -16,6 +17,8 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
+from app.infrastructure.brokers.base import BaseMessageBroker
+from app.infrastructure.brokers.kafka import KafkaMessageBroker
 from app.infrastructure.uow.users.alchemy import SQLAlchemyUsersUnitOfWork
 from app.infrastructure.uow.users.base import UsersUnitOfWork
 from app.logic.commands.users import CreateUserCommand, UpdateUserCommand, VerifyUserCredentialsCommand, \
@@ -54,8 +57,23 @@ class HandlerProvider(Provider):
         return cast(
             EventHandlerMapping,
             {
-                UserDeleteEvent: UserDeleteEventHandler
+                UserDeleteEvent: [UserDeleteEventHandler]
             }
+        )
+
+
+class BrokerProvider(Provider):
+    settings = from_context(provides=Settings, scope=Scope.APP)
+
+    @provide(scope=Scope.APP)
+    async def get_kafka_broker(self, settings: Settings) -> BaseMessageBroker:
+        return KafkaMessageBroker(
+            producer=AIOKafkaProducer(bootstrap_servers=settings.broker.url),
+            consumer=AIOKafkaConsumer(
+                bootstrap_servers=settings.broker.url,
+                group_id=f"users-service-group",
+                metadata_max_age_ms=30000,
+            ),
         )
 
 
@@ -93,6 +111,7 @@ class DatabaseProvider(Provider):
 container = make_async_container(
     DatabaseProvider(),
     HandlerProvider(),
+    BrokerProvider(),
     context={
         Settings: Settings(),
     }

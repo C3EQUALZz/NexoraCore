@@ -3,6 +3,14 @@ from typing import Self
 from pydantic import BaseModel, Field, EmailStr
 
 
+class UserDeleteEventSchemaResponse(BaseModel):
+    oid: UUID
+
+    @classmethod
+    def from_(cls, oid: str) -> Self:
+        return cls(oid=UUID(oid))
+
+
 class UserSchemaResponse(BaseModel):
     oid: UUID
     surname: str = Field(min_length=1, max_length=50)

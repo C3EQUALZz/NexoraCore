@@ -5,13 +5,7 @@ from typing import (
     Dict,
     List,
     Optional,
-    Type,
-)
-
-from app.logic.types.handlers import (
-    CommandHandlerMapping,
-    EventHandlerMapping,
-    HT
+    Type, Union,
 )
 
 from app.infrastructure.uow.base import AbstractUnitOfWork
@@ -22,6 +16,10 @@ from app.logic.handlers.base import (
     AbstractEventHandler,
 )
 from app.logic.message_bus import MessageBus
+from app.logic.types.handlers import (
+    CommandHandlerMapping,
+    EventHandlerMapping,
+)
 
 
 class Bootstrap:
@@ -66,7 +64,10 @@ class Bootstrap:
             command_handlers=injected_command_handlers,
         )
 
-    async def _inject_dependencies(self, handler: Type[HT]) -> HT:
+    async def _inject_dependencies(
+            self,
+            handler: Union[Type[AbstractEventHandler], Type[AbstractCommandHandler]]
+    ) -> Union[AbstractEventHandler, AbstractCommandHandler]:
         """
         Inspecting handler to know its signature and init params, after which only necessary dependencies will be
         injected to the handler.

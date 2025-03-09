@@ -81,7 +81,9 @@ async def create_user(
 ) -> UserSchemaResponse:
     try:
         bootstrap: Bootstrap = Bootstrap(
-            uow=uow, events_handlers_for_injection=events, commands_handlers_for_injection=commands
+            uow=uow,
+            events_handlers_for_injection=events,
+            commands_handlers_for_injection=commands
         )
 
         messagebus: MessageBus = await bootstrap.get_messagebus()
@@ -106,7 +108,9 @@ async def update_user(
 ) -> UserSchemaResponse:
     try:
         bootstrap: Bootstrap = Bootstrap(
-            uow=uow, events_handlers_for_injection=events, commands_handlers_for_injection=commands
+            uow=uow,
+            events_handlers_for_injection=events,
+            commands_handlers_for_injection=commands
         )
 
         messagebus: MessageBus = await bootstrap.get_messagebus()

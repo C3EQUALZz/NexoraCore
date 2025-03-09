@@ -10,6 +10,7 @@ from app.application.api.v1.users.handlers import router as user_router
 from app.application.utils.admin_setup import setup_admin
 from app.infrastructure.adapters.alchemy.metadata import metadata
 from app.infrastructure.adapters.alchemy.orm import start_mappers
+from app.infrastructure.brokers.base import BaseMessageBroker
 from app.infrastructure.uow.users.base import UsersUnitOfWork
 from app.logic.container import container
 from app.settings.config import Settings
@@ -17,6 +18,9 @@ from app.settings.config import Settings
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    broker: BaseMessageBroker = await container.get(BaseMessageBroker)
+
+    await broker.start()
 
     # cache.pool = await container.get(ConnectionPool)
     # cache.client = await container.get(Redis)
@@ -31,6 +35,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     yield
 
+    await broker.close()
     await app.state.dishka_container.close()
     clear_mappers()
 

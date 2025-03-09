@@ -7,4 +7,4 @@ from app.logic.handlers.users.base import UsersEventHandler
 
 class UserDeleteEventHandler(UsersEventHandler):
     async def __call__(self, event: UserDeleteEvent) -> None:
-        asyncio.create_task(send_delete_user_event(event))
+        asyncio.create_task(send_delete_user_event(**await event.to_dict()))

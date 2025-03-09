@@ -8,6 +8,7 @@ from typing import (
     TypeVar,
 )
 
+from app.infrastructure.brokers.base import BaseMessageBroker
 from app.infrastructure.uow.base import AbstractUnitOfWork
 from app.logic.commands.base import AbstractCommand
 from app.logic.events.base import AbstractEvent
