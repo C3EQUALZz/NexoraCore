@@ -17,30 +17,28 @@ ET = TypeVar("ET", bound=AbstractEvent)
 CT = TypeVar("CT", bound=AbstractCommand)
 
 
-class AbstractHandler(ABC):
+class AbstractEventHandler(ABC, Generic[ET]):
     """
     Abstract event handler class, from which every event handler should be inherited from.
     """
 
     @abstractmethod
-    def __init__(self, uow: AbstractUnitOfWork) -> None:
+    def __init__(self, uow: AbstractUnitOfWork, broker: BaseMessageBroker) -> None:
         raise NotImplementedError
-
-
-class AbstractEventHandler(AbstractHandler, ABC, Generic[ET]):
-    """
-    Abstract event handler class, from which every event handler should be inherited from.
-    """
 
     @abstractmethod
     async def __call__(self, event: ET) -> None:
         raise NotImplementedError
 
 
-class AbstractCommandHandler(AbstractHandler, ABC, Generic[CT]):
+class AbstractCommandHandler(ABC, Generic[CT]):
     """
     Abstract command handler class, from which every command handler should be inherited from.
     """
+
+    @abstractmethod
+    def __init__(self, uow: AbstractUnitOfWork) -> None:
+        raise NotImplementedError
 
     @abstractmethod
     async def __call__(self, command: CT) -> Any:

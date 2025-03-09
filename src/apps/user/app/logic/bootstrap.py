@@ -5,10 +5,11 @@ from typing import (
     Dict,
     List,
     Optional,
-    Type, Union,
+    Type,
+    Union,
 )
+from typing import Generic
 
-from app.infrastructure.uow.base import AbstractUnitOfWork
 from app.logic.commands.base import AbstractCommand
 from app.logic.events.base import AbstractEvent
 from app.logic.handlers.base import (
@@ -19,17 +20,18 @@ from app.logic.message_bus import MessageBus
 from app.logic.types.handlers import (
     CommandHandlerMapping,
     EventHandlerMapping,
+    UT
 )
 
 
-class Bootstrap:
+class Bootstrap(Generic[UT]):
     """
     Bootstrap class for Dependencies Injection purposes.
     """
 
     def __init__(
             self,
-            uow: AbstractUnitOfWork,
+            uow: UT,
             events_handlers_for_injection: EventHandlerMapping,  # type: ignore
             commands_handlers_for_injection: CommandHandlerMapping,  # type: ignore
             dependencies: Optional[Dict[str, Any]] = None,

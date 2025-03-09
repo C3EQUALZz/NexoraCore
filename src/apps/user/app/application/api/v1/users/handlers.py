@@ -20,7 +20,6 @@ from app.infrastructure.uow.users.base import UsersUnitOfWork
 from app.logic.bootstrap import Bootstrap
 from app.logic.commands.users import CreateUserCommand, UpdateUserCommand, DeleteUserCommand
 from app.logic.message_bus import MessageBus
-from app.logic.types.handlers import EventHandlerMapping, CommandHandlerMapping
 from app.logic.views.users import UsersViews
 
 router = APIRouter(prefix="/users", tags=["users"], route_class=DishkaRoute)
@@ -75,17 +74,9 @@ async def get_user(
 )
 async def create_user(
         scheme: CreateUserSchemaRequest,
-        uow: FromDishka[UsersUnitOfWork],
-        events: FromDishka[EventHandlerMapping],
-        commands: FromDishka[CommandHandlerMapping],
+        bootstrap: FromDishka[Bootstrap[UsersUnitOfWork]]
 ) -> UserSchemaResponse:
     try:
-        bootstrap: Bootstrap = Bootstrap(
-            uow=uow,
-            events_handlers_for_injection=events,
-            commands_handlers_for_injection=commands
-        )
-
         messagebus: MessageBus = await bootstrap.get_messagebus()
 
         await messagebus.handle(CreateUserCommand(**scheme.model_dump()))
@@ -102,16 +93,9 @@ async def create_user(
 )
 async def update_user(
         scheme: UpdateUserSchemaRequest,
-        uow: FromDishka[UsersUnitOfWork],
-        events: FromDishka[EventHandlerMapping],
-        commands: FromDishka[CommandHandlerMapping],
+        bootstrap: FromDishka[Bootstrap[UsersUnitOfWork]],
 ) -> UserSchemaResponse:
     try:
-        bootstrap: Bootstrap = Bootstrap(
-            uow=uow,
-            events_handlers_for_injection=events,
-            commands_handlers_for_injection=commands
-        )
 
         messagebus: MessageBus = await bootstrap.get_messagebus()
 
@@ -132,14 +116,9 @@ async def update_user(
 )
 async def delete_user(
         user_id: UUID,
-        uow: FromDishka[UsersUnitOfWork],
-        events: FromDishka[EventHandlerMapping],
-        commands: FromDishka[CommandHandlerMapping],
+        bootstrap: FromDishka[Bootstrap[UsersUnitOfWork]]
 ) -> None:
     try:
-        bootstrap: Bootstrap = Bootstrap(
-            uow=uow, events_handlers_for_injection=events, commands_handlers_for_injection=commands
-        )
 
         messagebus: MessageBus = await bootstrap.get_messagebus()
         await messagebus.handle(DeleteUserCommand(oid=str(user_id)))

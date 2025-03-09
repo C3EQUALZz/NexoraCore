@@ -73,16 +73,14 @@ class AdminSettings(CommonSettings):
     password: str = Field(alias="ADMIN_PASSWORD")
     telegram_uri: str = Field(alias="ADMIN_TELEGRAM_URI")
 
-class RabbitMQSettings(CommonSettings):
-    host: str = Field(alias="RABBITMQ_HOST")
-    user: str = Field(alias="RABBITMQ_USER")
-    password: str = Field(alias="RABBITMQ_PASSWORD")
-    port: int = Field(alias="RABBITMQ_PORT_NETWORK")
+
+class BrokerSettings(CommonSettings):
+    host: str = Field(alias="BROKER_HOST")
+    port: int = Field(alias="BROKER_PORT_NETWORK")
 
     @property
     def url(self) -> str:
-        return f"localhost:9092"
-
+        return f"{self.host}:{self.port}"
 
 
 class Settings(CommonSettings):
@@ -94,4 +92,4 @@ class Settings(CommonSettings):
     alchemy_settings: SQLAlchemySettings = SQLAlchemySettings()
     cache: RedisSettings = RedisSettings()
     admin: AdminSettings = AdminSettings()
-    broker: RabbitMQSettings = RabbitMQSettings()
+    broker: BrokerSettings = BrokerSettings()

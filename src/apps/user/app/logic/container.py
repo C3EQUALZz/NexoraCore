@@ -17,6 +17,9 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
+from app.logic.bootstrap import Bootstrap
+from app.logic.types.handlers import UT
+
 from app.infrastructure.brokers.base import BaseMessageBroker
 from app.infrastructure.brokers.kafka import KafkaMessageBroker
 from app.infrastructure.uow.users.alchemy import SQLAlchemyUsersUnitOfWork
@@ -77,6 +80,30 @@ class BrokerProvider(Provider):
         )
 
 
+class AppProvider(Provider):
+    settings = from_context(provides=Settings, scope=Scope.APP)
+
+    @provide(scope=Scope.APP)
+    async def get_users_uow(self, session_maker: async_sessionmaker[AsyncSession]) -> UsersUnitOfWork:
+        return SQLAlchemyUsersUnitOfWork(session_factory=session_maker)
+
+    @provide(scope=Scope.APP)
+    async def get_bootstrap(
+            self,
+            events: EventHandlerMapping,
+            commands: CommandHandlerMapping,
+            broker: BaseMessageBroker,
+            uow: type[UT]
+    ) -> Bootstrap[UT]:
+
+        return Bootstrap(
+            uow=uow,
+            events_handlers_for_injection=events,
+            commands_handlers_for_injection=commands,
+            dependencies={"broker": broker}
+        )
+
+
 class DatabaseProvider(Provider):
     settings = from_context(provides=Settings, scope=Scope.APP)
 
@@ -103,15 +130,13 @@ class DatabaseProvider(Provider):
 
         return session_maker
 
-    @provide(scope=Scope.APP)
-    async def get_users_uow(self, session_maker: async_sessionmaker[AsyncSession]) -> UsersUnitOfWork:
-        return SQLAlchemyUsersUnitOfWork(session_factory=session_maker)
 
 
 container = make_async_container(
     DatabaseProvider(),
     HandlerProvider(),
     BrokerProvider(),
+    AppProvider(),
     context={
         Settings: Settings(),
     }
