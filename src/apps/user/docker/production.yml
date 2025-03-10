@@ -12,17 +12,20 @@ services:
     env_file:
       - ../.env
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - user-service
+      - microservices-network
 
   postgres:
     container_name: postgres-app-users
     image: postgres:16.3-alpine
     restart: unless-stopped
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "${DATABASE_PORT}:5432"
     volumes:
       - postgres_data_users:/var/lib/postgresql/data
     environment:
@@ -30,7 +33,7 @@ services:
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: ${DATABASE_NAME}
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d ${DATABASE_NAME}" ]
+      test: [ "CMD-SHELL", "pg_isready -U $${DATABASE_USER} -d $${DATABASE_NAME}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -93,3 +96,5 @@ volumes:
 networks:
   user-service:
     driver: bridge
+  microservices-network:
+    external: true

@@ -2,6 +2,7 @@ from app.exceptions.infrastructure import UserNotFoundException
 from app.exceptions.logic import UserAlreadyExistsException, InvalidPasswordException
 from app.infrastructure.services.users import UsersService
 from app.infrastructure.utils.security import hash_password, validate_password
+from app.logic.events.users import UserDeleteEvent
 from app.logic.handlers.users.base import UsersCommandHandler
 from app.logic.commands.users import CreateUserCommand, VerifyUserCredentialsCommand, UpdateUserCommand, \
     DeleteUserCommand
@@ -49,12 +50,23 @@ class UpdateUserCommandHandler(UsersCommandHandler[UpdateUserCommand]):
 
 class DeleteUserCommandHandler(UsersCommandHandler[DeleteUserCommand]):
     async def __call__(self, command: UpdateUserCommand) -> None:
-        user_service: UsersService = UsersService(uow=self._uow)
 
-        if not await user_service.check_existence(oid=command.oid):
-            raise UserNotFoundException(command.oid)
+        async with self._uow as uow:
 
-        return await user_service.delete(oid=command.oid)
+            user_service: UsersService = UsersService(uow=uow)
+
+            if not await user_service.check_existence(oid=command.oid):
+                raise UserNotFoundException(command.oid)
+
+            deleted_user = await user_service.delete(oid=command.oid)
+
+            await uow.add_event(
+                UserDeleteEvent(
+                    user_oid=command.oid,
+                )
+            )
+
+            return deleted_user
 
 
 class VerifyUserCredentialsCommandHandler(UsersCommandHandler[VerifyUserCredentialsCommand]):

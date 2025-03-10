@@ -6,15 +6,10 @@ from typing import (
     List,
     Optional,
     Type,
+    Union,
 )
+from typing import Generic
 
-from app.logic.types.handlers import (
-    CommandHandlerMapping,
-    EventHandlerMapping,
-    HT
-)
-
-from app.infrastructure.uow.base import AbstractUnitOfWork
 from app.logic.commands.base import AbstractCommand
 from app.logic.events.base import AbstractEvent
 from app.logic.handlers.base import (
@@ -22,16 +17,21 @@ from app.logic.handlers.base import (
     AbstractEventHandler,
 )
 from app.logic.message_bus import MessageBus
+from app.logic.types.handlers import (
+    CommandHandlerMapping,
+    EventHandlerMapping,
+    UT
+)
 
 
-class Bootstrap:
+class Bootstrap(Generic[UT]):
     """
     Bootstrap class for Dependencies Injection purposes.
     """
 
     def __init__(
             self,
-            uow: AbstractUnitOfWork,
+            uow: UT,
             events_handlers_for_injection: EventHandlerMapping,  # type: ignore
             commands_handlers_for_injection: CommandHandlerMapping,  # type: ignore
             dependencies: Optional[Dict[str, Any]] = None,
@@ -66,7 +66,10 @@ class Bootstrap:
             command_handlers=injected_command_handlers,
         )
 
-    async def _inject_dependencies(self, handler: Type[HT]) -> HT:
+    async def _inject_dependencies(
+            self,
+            handler: Union[Type[AbstractEventHandler], Type[AbstractCommandHandler]]
+    ) -> Union[AbstractEventHandler, AbstractCommandHandler]:
         """
         Inspecting handler to know its signature and init params, after which only necessary dependencies will be
         injected to the handler.

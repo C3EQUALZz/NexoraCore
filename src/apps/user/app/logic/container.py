@@ -1,6 +1,7 @@
 import logging
 from typing import cast
 
+from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
 from dishka import (
     Provider,
     Scope,
@@ -16,12 +17,19 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
+from app.logic.bootstrap import Bootstrap
+from app.logic.types.handlers import UT
+
+from app.infrastructure.brokers.base import BaseMessageBroker
+from app.infrastructure.brokers.kafka import KafkaMessageBroker
 from app.infrastructure.uow.users.alchemy import SQLAlchemyUsersUnitOfWork
 from app.infrastructure.uow.users.base import UsersUnitOfWork
 from app.logic.commands.users import CreateUserCommand, UpdateUserCommand, VerifyUserCredentialsCommand, \
     DeleteUserCommand
+from app.logic.events.users import UserDeleteEvent
 from app.logic.handlers.users.commands import CreateUserCommandHandler, UpdateUserCommandHandler, \
     VerifyUserCredentialsCommandHandler, DeleteUserCommandHandler
+from app.logic.handlers.users.events import UserDeleteEventHandler
 from app.logic.types.handlers import CommandHandlerMapping, EventHandlerMapping
 from app.settings.config import Settings
 
@@ -49,7 +57,50 @@ class HandlerProvider(Provider):
         """
         Here you have to link events and event handlers for future inject in Bootstrap
         """
-        return cast(EventHandlerMapping, {})
+        return cast(
+            EventHandlerMapping,
+            {
+                UserDeleteEvent: [UserDeleteEventHandler]
+            }
+        )
+
+
+class BrokerProvider(Provider):
+    settings = from_context(provides=Settings, scope=Scope.APP)
+
+    @provide(scope=Scope.APP)
+    async def get_kafka_broker(self, settings: Settings) -> BaseMessageBroker:
+        return KafkaMessageBroker(
+            producer=AIOKafkaProducer(bootstrap_servers=settings.broker.url),
+            consumer=AIOKafkaConsumer(
+                bootstrap_servers=settings.broker.url,
+                group_id=f"users-service-group",
+                metadata_max_age_ms=30000,
+            ),
+        )
+
+
+class AppProvider(Provider):
+    settings = from_context(provides=Settings, scope=Scope.APP)
+
+    @provide(scope=Scope.APP)
+    async def get_users_uow(self, session_maker: async_sessionmaker[AsyncSession]) -> UsersUnitOfWork:
+        return SQLAlchemyUsersUnitOfWork(session_factory=session_maker)
+
+    @provide(scope=Scope.APP)
+    async def get_bootstrap(
+            self,
+            events: EventHandlerMapping,
+            commands: CommandHandlerMapping,
+            broker: BaseMessageBroker,
+            uow: UT
+    ) -> Bootstrap[UT]:
+        return Bootstrap(
+            uow=uow,
+            events_handlers_for_injection=events,
+            commands_handlers_for_injection=commands,
+            dependencies={"broker": broker}
+        )
 
 
 class DatabaseProvider(Provider):
@@ -78,14 +129,13 @@ class DatabaseProvider(Provider):
 
         return session_maker
 
-    @provide(scope=Scope.APP)
-    async def get_users_uow(self, session_maker: async_sessionmaker[AsyncSession]) -> UsersUnitOfWork:
-        return SQLAlchemyUsersUnitOfWork(session_factory=session_maker)
 
 
 container = make_async_container(
     DatabaseProvider(),
     HandlerProvider(),
+    BrokerProvider(),
+    AppProvider(),
     context={
         Settings: Settings(),
     }
