@@ -93,9 +93,8 @@ class AppProvider(Provider):
             events: EventHandlerMapping,
             commands: CommandHandlerMapping,
             broker: BaseMessageBroker,
-            uow: type[UT]
+            uow: UT
     ) -> Bootstrap[UT]:
-
         return Bootstrap(
             uow=uow,
             events_handlers_for_injection=events,

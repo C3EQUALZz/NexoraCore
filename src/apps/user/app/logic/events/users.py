@@ -1,9 +1,10 @@
 from app.logic.events.base import AbstractEvent
 from dataclasses import dataclass
+from typing import ClassVar
 
 
 @dataclass(frozen=True)
-class UserCreatedEvent(AbstractEvent):
+class UserCreateEvent(AbstractEvent):
     oid: str
     email: str
     surname: str
@@ -13,4 +14,4 @@ class UserCreatedEvent(AbstractEvent):
 
 @dataclass(frozen=True)
 class UserDeleteEvent(AbstractEvent):
-    oid: str
+    user_oid: str

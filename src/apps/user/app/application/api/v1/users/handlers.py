@@ -119,7 +119,6 @@ async def delete_user(
         bootstrap: FromDishka[Bootstrap[UsersUnitOfWork]]
 ) -> None:
     try:
-
         messagebus: MessageBus = await bootstrap.get_messagebus()
         await messagebus.handle(DeleteUserCommand(oid=str(user_id)))
 

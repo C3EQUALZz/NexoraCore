@@ -62,7 +62,7 @@ class DeleteUserCommandHandler(UsersCommandHandler[DeleteUserCommand]):
 
             await uow.add_event(
                 UserDeleteEvent(
-                    oid=command.oid,
+                    user_oid=command.oid,
                 )
             )
 

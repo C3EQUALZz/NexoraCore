@@ -21,7 +21,7 @@ class BaseMessageBroker(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def send_message(self, key: str, topic: str, value: bytes) -> None:
+    async def send_message(self, key: bytes, topic: str, value: bytes) -> None:
         raise NotImplementedError
 
     @abstractmethod
