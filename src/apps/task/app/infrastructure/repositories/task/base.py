@@ -3,7 +3,7 @@ from app.domain.entities.task import TaskEntity
 from abc import ABC, abstractmethod
 
 
-class TeamsRepository(AbstractRepository[TaskEntity], ABC):
+class TasksRepository(AbstractRepository[TaskEntity], ABC):
     """
     An interface for work with tasks, that is used by TasksUnitOfWork.
     The main goal is that implementations of this interface can be easily replaced in TasksUnitOfWork
