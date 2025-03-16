@@ -27,7 +27,11 @@ class TaskEntity(BaseEntity):
         created_by: str = document["created_by"]
         due_datetime: datetime = document["due_datetime"]
         status: TaskStatus = TaskStatus(document["status"])
-        comments: list[Comment] = [Comment(x) for x in document["comments"]]
+
+        if document.get("comments", None):
+            comments: list[Comment] = [Comment(x) for x in document["comments"]]
+        else:
+            comments: list[Comment] = []
 
         return cls(
             title=title,
