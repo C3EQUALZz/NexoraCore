@@ -57,6 +57,15 @@ class AdminSettings(CommonSettings):
     telegram_uri: str = Field(alias="ADMIN_TELEGRAM_URI")
 
 
+class BrokerSettings(CommonSettings):
+    host: str = Field(alias="BROKER_HOST")
+    port: int = Field(alias="BROKER_PORT_NETWORK")
+
+    @property
+    def url(self) -> str:
+        return f"{self.host}:{self.port}"
+
+
 class Settings(CommonSettings):
     """
     Класс настроек, которым в дальнейшем будет оперировать приложение.
@@ -65,3 +74,4 @@ class Settings(CommonSettings):
     database: DatabaseSettings = DatabaseSettings()
     cache: RedisSettings = RedisSettings()
     admin: AdminSettings = AdminSettings()
+    broker: BrokerSettings = BrokerSettings()

@@ -1,7 +1,8 @@
 from abc import ABC
 from dataclasses import (
     dataclass,
-    field, asdict,
+    field,
+    asdict,
 )
 from datetime import datetime, UTC
 from typing import (

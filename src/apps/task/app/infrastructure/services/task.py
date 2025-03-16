@@ -2,7 +2,7 @@ from app.domain.entities.task import TaskEntity
 from app.infrastructure.uow.task.base import TasksUnitOfWork
 
 
-class TaskService:
+class TasksService:
     def __init__(self, uow: TasksUnitOfWork) -> None:
         self._uow = uow
 
