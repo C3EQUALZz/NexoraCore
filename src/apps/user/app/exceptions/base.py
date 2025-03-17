@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 
 @dataclass(eq=False)
-class ApplicationException(Exception, ABC):
+class BaseAppException(Exception, ABC):
     @property
     def message(self) -> str:
         raise NotImplementedError

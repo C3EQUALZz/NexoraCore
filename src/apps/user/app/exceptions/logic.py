@@ -2,11 +2,11 @@ from abc import ABC
 from dataclasses import dataclass
 from http import HTTPStatus
 
-from app.exceptions.base import ApplicationException
+from app.exceptions.base import BaseAppException
 
 
 @dataclass(eq=False)
-class LogicException(ApplicationException, ABC):
+class LogicException(BaseAppException, ABC):
     @property
     def message(self) -> str:
         return "An logic error has occurred"

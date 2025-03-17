@@ -1,11 +1,11 @@
 from dataclasses import dataclass
-from app.exceptions.base import ApplicationException
+from app.exceptions.base import BaseAppException
 from abc import ABC
 from http import HTTPStatus
 
 
 @dataclass(eq=False)
-class InfrastructureException(ApplicationException, ABC):
+class InfrastructureException(BaseAppException, ABC):
     @property
     def message(self) -> str:
         return "Infrastructure exception has occurred"

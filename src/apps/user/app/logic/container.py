@@ -31,7 +31,7 @@ from app.logic.handlers.users.commands import CreateUserCommandHandler, UpdateUs
 from app.logic.handlers.users.events import UserDeleteEventHandler
 from app.logic.types.handlers import CommandHandlerMapping, EventHandlerMapping
 from app.logic.types.handlers import UT
-from app.settings.config import Settings
+from app.settings.config import Settings, get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -137,7 +137,7 @@ class AuthProvider(Provider):
     async def get_config(self, settings: Settings) -> AuthXConfig:
         return AuthXConfig(
             JWT_ALGORITHM="RS256",
-            JWT_DECODE_ALGORITHMS = ["RS256"],
+            JWT_DECODE_ALGORITHMS=["RS256"],
             JWT_PRIVATE_KEY=settings.auth.private_key,
             JWT_PUBLIC_KEY=settings.auth.public_key
         )
@@ -154,6 +154,6 @@ container = make_async_container(
     AppProvider(),
     AuthProvider(),
     context={
-        Settings: Settings(),
+        Settings: get_settings(),
     }
 )
