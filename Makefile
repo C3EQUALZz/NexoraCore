@@ -5,7 +5,7 @@ NETWORK_NAME = microservices-network
 
 # 👉 Создание сети (не падать, если она уже есть)
 network:
-	@docker network rm $(NETWORK_NAME)
+	-@docker network rm $(NETWORK_NAME)
 	@docker network create $(NETWORK_NAME)
 
 # 👉 Поднять kafka (брокер)

@@ -5,6 +5,8 @@ services:
     container_name: zookeeper
     ports:
       - "2181:2181"
+    networks:
+      - kafka-internal
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -17,7 +19,7 @@ services:
       - zookeeper
     ports:
       - "9092:9092"
-      - "29093:29093"
+      - "29092:29092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
@@ -33,13 +35,9 @@ services:
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
       CONFLUENT_METRICS_ENABLE: "true"
       CONFLUENT_SUPPORT_CUSTOMER_ID: "anonymous"
-
-  kafka-tools:
-    image: confluentinc/cp-kafka:5.4.0
-    hostname: kafka-tools
-    container_name: kafka-tools
-    command: [ "tail", "-f", "/dev/null" ]
-    network_mode: "host"
+    networks:
+      - user-service
+      - kafka-internal
 
   schema-registry:
     image: confluentinc/cp-schema-registry:5.4.0
@@ -53,6 +51,9 @@ services:
     environment:
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
       SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: "zookeeper:2181"
+    networks:
+      - user-service
+      - kafka-internal
 
   control-center:
     image: confluentinc/cp-enterprise-control-center:5.4.0
@@ -73,6 +74,8 @@ services:
       CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
       CONFLUENT_METRICS_TOPIC_REPLICATION: 1
       PORT: 9021
+    networks:
+      - kafka-internal
 
   kafka-ui:
     image: provectuslabs/kafka-ui
@@ -86,3 +89,12 @@ services:
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
       KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL: PLAINTEXT
       KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://schema-registry:8081
+    networks:
+      - kafka-internal
+      - user-service
+
+networks:
+  kafka-internal:
+    driver: bridge
+  user-service:
+    driver: bridge

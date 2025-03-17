@@ -8,6 +8,10 @@ services:
     command: ["sh", "-c", "alembic upgrade head && uvicorn --factory app.main:create_app --reload --host 0.0.0.0 --port 8000"]
     ports:
       - "${API_PORT}:8000"
+    depends_on:
+      - broker
+      - redis
+      - postgres
     env_file:
       - ../.env
     networks:

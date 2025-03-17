@@ -55,7 +55,6 @@ async def get_user(
         uow: FromDishka[UsersUnitOfWork],
 ) -> UserSchemaResponse:
     try:
-
         users_views: UsersViews = UsersViews(uow=uow)
         user: UserEntity = await users_views.get_user_by_id(str(user_id))
         return UserSchemaResponse.from_entity(entity=user)
