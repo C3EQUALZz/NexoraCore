@@ -8,7 +8,7 @@ from dishka.integrations.fastapi import (
 from fastapi import (
     APIRouter,
     HTTPException,
-    Query
+    Query, Depends
 )
 from starlette import status
 
@@ -21,6 +21,7 @@ from app.logic.bootstrap import Bootstrap
 from app.logic.commands.users import CreateUserCommand, UpdateUserCommand, DeleteUserCommand
 from app.logic.message_bus import MessageBus
 from app.logic.views.users import UsersViews
+from app.application.api.v1.auth.handlers import oauth2_scheme
 
 router = APIRouter(prefix="/users", tags=["users"], route_class=DishkaRoute)
 logger = logging.getLogger(__name__)
@@ -29,6 +30,7 @@ logger = logging.getLogger(__name__)
 @router.get(
     "/",
     status_code=status.HTTP_200_OK,
+    dependencies=[Depends(oauth2_scheme)],
 )
 async def get_users(
         uow: FromDishka[UsersUnitOfWork],
@@ -49,6 +51,7 @@ async def get_users(
 @router.get(
     "/{user_id}/",
     status_code=status.HTTP_200_OK,
+    dependencies=[Depends(oauth2_scheme)]
 )
 async def get_user(
         user_id: UUID,
@@ -88,7 +91,8 @@ async def create_user(
 
 @router.patch(
     "/{user_id}/",
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(oauth2_scheme)]
 )
 async def update_user(
         scheme: UpdateUserSchemaRequest,
@@ -112,6 +116,7 @@ async def update_user(
     responses={
         status.HTTP_404_NOT_FOUND: {"model": UserNotFoundException},
     },
+    dependencies=[Depends(oauth2_scheme)]
 )
 async def delete_user(
         user_id: UUID,

@@ -137,6 +137,7 @@ class AuthProvider(Provider):
     async def get_config(self, settings: Settings) -> AuthXConfig:
         return AuthXConfig(
             JWT_ALGORITHM="RS256",
+            JWT_DECODE_ALGORITHMS = ["RS256"],
             JWT_PRIVATE_KEY=settings.auth.private_key,
             JWT_PUBLIC_KEY=settings.auth.public_key
         )

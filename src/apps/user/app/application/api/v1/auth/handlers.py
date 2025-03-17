@@ -20,8 +20,7 @@ from app.logic.message_bus import MessageBus
 from app.logic.views.users import UsersViews
 
 logger = logging.getLogger(__name__)
-bearer = HTTPBearer(auto_error=False)
-router = APIRouter(prefix="/auth", tags=["auth"], route_class=DishkaRoute, dependencies=[Depends(bearer)])
+router = APIRouter(prefix="/auth", tags=["auth"], route_class=DishkaRoute)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login/")
 
 
@@ -61,7 +60,11 @@ async def refresh(
         token: str = Depends(oauth2_scheme),
 ) -> TokenResponse:
     try:
-        refresh_token_payload = security.verify_token(token=RequestToken(token=token, location="headers"))
+        refresh_token_payload = security.verify_token(token=RequestToken(
+            token=token,
+            location="headers",
+            type="refresh"
+        ))
         return TokenResponse(access_token=security.create_access_token(refresh_token_payload.sub))
     except AuthXException as e:
         logger.error(e)
