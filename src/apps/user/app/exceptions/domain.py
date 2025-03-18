@@ -76,7 +76,7 @@ class EmptyGenderException(DomainException):
 class RoleException(DomainException):
     @property
     def message(self) -> str:
-        return "Role does not exist. Please choose admin or user"
+        return "Role does not exist. Please choose admin or staffer, manager"
 
 
 @dataclass(eq=False)

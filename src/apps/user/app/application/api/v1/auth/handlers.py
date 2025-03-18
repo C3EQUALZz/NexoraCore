@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from starlette import status
 
-from app.application.api.v1.auth.dependencies import get_access_token_payload, get_refresh_token_payload
+from app.application.api.v1.auth.dependencies import get_access_token_payload, get_refresh_token_payload, RoleChecker
 from app.application.api.v1.auth.schemas import TokenResponse
 from app.application.api.v1.users.schemas import UserSchemaResponse
 from app.domain.entities.user import UserEntity
@@ -48,6 +48,7 @@ async def login(
     status_code=status.HTTP_200_OK,
     response_model_exclude_none=True,
     summary="Endpoint for user refreshing",
+    dependencies=[Depends(RoleChecker(allowed_roles=["staffer", "admin", "manager"]))],
 )
 async def refresh(
         security: FromDishka[AuthX],
@@ -60,6 +61,7 @@ async def refresh(
     "/me/",
     status_code=status.HTTP_200_OK,
     summary="Endpoint for user info",
+    dependencies=[Depends(RoleChecker(allowed_roles=["staffer", "admin", "manager"]))]
 )
 async def get_me(
         uow: FromDishka[UsersUnitOfWork],
@@ -74,6 +76,7 @@ async def get_me(
     "/logout/",
     status_code=status.HTTP_200_OK,
     summary="Endpoint for user logout. Deletes his JWT access token",
+    dependencies=[Depends(RoleChecker(allowed_roles=["staffer", "admin", "manager"]))]
 )
 async def logout(
         cache: FromDishka[BaseCache],

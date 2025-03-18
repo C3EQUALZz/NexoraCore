@@ -11,7 +11,7 @@ from fastapi import (
 )
 from starlette import status
 
-from app.application.api.v1.auth.dependencies import get_access_token_payload
+from app.application.api.v1.auth.dependencies import RoleChecker
 from app.application.api.v1.users.schemas import UserSchemaResponse, CreateUserSchemaRequest, UpdateUserSchemaRequest
 from app.domain.entities.user import UserEntity
 from app.exceptions.infrastructure import UserNotFoundException
@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 @router.get(
     "/",
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(get_access_token_payload)],
+    dependencies=[Depends(RoleChecker(allowed_roles=["admin", "staffer", "manager"]))],
 )
 async def get_users(
         uow: FromDishka[UsersUnitOfWork],
@@ -43,7 +43,7 @@ async def get_users(
 @router.get(
     "/{user_id}/",
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(get_access_token_payload)]
+    dependencies=[Depends(RoleChecker(allowed_roles=["admin", "staffer", "manager"]))]
 )
 async def get_user(
         user_id: UUID,
@@ -75,7 +75,7 @@ async def create_user(
 @router.patch(
     "/{user_id}/",
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(get_access_token_payload)]
+    dependencies=[Depends(RoleChecker(allowed_roles=["admin", "staffer"]))],
 )
 async def update_user(
         scheme: UpdateUserSchemaRequest,
@@ -92,7 +92,7 @@ async def update_user(
     responses={
         status.HTTP_404_NOT_FOUND: {"model": UserNotFoundException},
     },
-    dependencies=[Depends(get_access_token_payload)]
+    dependencies=[Depends(RoleChecker(allowed_roles=["admin", "staffer"]))]
 )
 async def delete_user(
         user_id: UUID,

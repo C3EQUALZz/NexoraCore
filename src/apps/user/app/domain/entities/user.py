@@ -11,5 +11,5 @@ class UserEntity(BaseEntity):
     patronymic: str
     email: Email
     password: Password
-    role: Role = field(default_factory=lambda: Role("user"))
+    role: Role = field(default_factory=lambda: Role("staffer"))
     status: Status = field(default_factory=lambda: Status("logged-in"))
