@@ -24,3 +24,27 @@ class EmptyCredentialsException(ApplicationException):
     @property
     def status(self) -> int:
         return HTTPStatus.BAD_REQUEST.value
+
+
+@dataclass(eq=False)
+class ForbiddenTokenException(ApplicationException):
+    @property
+    def message(self) -> str:
+        return "This token has been revoked. Please get a new token."
+
+    @property
+    def status(self) -> int:
+        return HTTPStatus.FORBIDDEN.value
+
+
+@dataclass(eq=False)
+class AuthException(ApplicationException):
+    value: str
+
+    @property
+    def message(self) -> str:
+        return self.value
+
+    @property
+    def status(self) -> int:
+        return HTTPStatus.FORBIDDEN.value

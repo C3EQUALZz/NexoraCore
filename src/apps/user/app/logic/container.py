@@ -10,6 +10,7 @@ from dishka import (
     make_async_container,
     provide,
 )
+from redis.asyncio import ConnectionPool, Redis
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -19,6 +20,8 @@ from sqlalchemy.ext.asyncio import (
 
 from app.infrastructure.brokers.base import BaseMessageBroker
 from app.infrastructure.brokers.kafka import KafkaMessageBroker
+from app.infrastructure.cache.base import BaseCache
+from app.infrastructure.cache.redis import RedisCache
 from app.infrastructure.uow.users.alchemy import SQLAlchemyUsersUnitOfWork
 from app.infrastructure.uow.users.base import UsersUnitOfWork
 from app.logic.bootstrap import Bootstrap
@@ -147,12 +150,25 @@ class AuthProvider(Provider):
         return AuthX(config=config)
 
 
+class RedisProvider(Provider):
+    settings = from_context(provides=Settings, scope=Scope.APP)
+
+    @provide(scope=Scope.APP)
+    async def get_connection_pool(self, settings: Settings) -> ConnectionPool:
+        return ConnectionPool.from_url(str(settings.cache.url), encoding="utf8", decode_responses=True)
+
+    @provide(scope=Scope.APP)
+    async def get_client(self, pool: ConnectionPool) -> BaseCache:
+        return RedisCache(Redis.from_pool(pool))
+
+
 container = make_async_container(
     DatabaseProvider(),
     HandlerProvider(),
     BrokerProvider(),
     AppProvider(),
     AuthProvider(),
+    RedisProvider(),
     context={
         Settings: get_settings(),
     }

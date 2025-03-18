@@ -12,6 +12,7 @@ from app.application.api.v1.auth.schemas import TokenResponse
 from app.application.api.v1.users.schemas import UserSchemaResponse
 from app.domain.entities.user import UserEntity
 from app.exceptions.base import BaseAppException
+from app.infrastructure.cache.base import BaseCache
 from app.infrastructure.uow.users.base import UsersUnitOfWork
 from app.logic.bootstrap import Bootstrap
 from app.logic.commands.auth import VerifyUserCredentialsCommand
@@ -33,19 +34,14 @@ async def login(
         bootstrap: FromDishka[Bootstrap[UsersUnitOfWork]],
         security: FromDishka[AuthX]
 ) -> TokenResponse:
-    try:
-        messagebus: MessageBus = await bootstrap.get_messagebus()
-        await messagebus.handle(VerifyUserCredentialsCommand(email=form.username, password=form.password))
-        user: UserEntity = messagebus.command_result
+    messagebus: MessageBus = await bootstrap.get_messagebus()
+    await messagebus.handle(VerifyUserCredentialsCommand(email=form.username, password=form.password))
+    user: UserEntity = messagebus.command_result
 
-        return TokenResponse(
-            access_token=security.create_access_token(uid=str(user.oid)),
-            refresh_token=security.create_refresh_token(uid=str(user.oid)),
-        )
-
-    except BaseAppException as e:
-        logger.error(e)
-        raise HTTPException(status_code=e.status, detail=e.message, headers={"WWW-Authenticate": "Bearer"})
+    return TokenResponse(
+        access_token=security.create_access_token(uid=str(user.oid)),
+        refresh_token=security.create_refresh_token(uid=str(user.oid)),
+    )
 
 
 @router.post(
@@ -58,11 +54,7 @@ async def refresh(
         security: FromDishka[AuthX],
         token: TokenPayload = Depends(get_refresh_token_payload),
 ) -> TokenResponse:
-    try:
-        return TokenResponse(access_token=security.create_access_token(token.sub))
-    except BaseAppException as e:
-        logger.error(e)
-        raise HTTPException(status_code=e.status, detail=e.message)
+    return TokenResponse(access_token=security.create_access_token(token.sub))
 
 
 @router.get(
@@ -74,12 +66,18 @@ async def get_me(
         uow: FromDishka[UsersUnitOfWork],
         token: TokenPayload = Depends(get_access_token_payload),
 ) -> UserSchemaResponse:
-    try:
+    users_views: UsersViews = UsersViews(uow=uow)
+    user: UserEntity = await users_views.get_user_by_id(token.sub)
+    return UserSchemaResponse.from_entity(entity=user)
 
-        users_views: UsersViews = UsersViews(uow=uow)
-        user: UserEntity = await users_views.get_user_by_id(token.sub)
-        return UserSchemaResponse.from_entity(entity=user)
 
-    except BaseAppException as e:
-        logger.error(e)
-        raise HTTPException(status_code=e.status, detail=e.message)
+@router.delete(
+    "/logout/",
+    status_code=status.HTTP_200_OK,
+    summary="Endpoint for user logout. Deletes his JWT access token",
+)
+async def logout(
+        cache: FromDishka[BaseCache],
+        token: TokenPayload = Depends(get_access_token_payload),
+) -> None:
+    await cache.set(token.jti, "", expire=36000)
