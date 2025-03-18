@@ -6,6 +6,7 @@ from fastapi import FastAPI
 
 from app.application.api.v1.team_members.handlers import router as team_members_router
 from app.application.api.v1.teams.handlers import router as teams_router
+from app.application.api.v1.utils.handlers import register_exception_handlers
 from app.logic.container import container
 
 
@@ -27,6 +28,8 @@ def create_app() -> FastAPI:
         root_path="/api/v1/teams",
         lifespan=lifespan
     )
+
+    register_exception_handlers(app)
 
     setup_dishka_fastapi(container=container, app=app)
 

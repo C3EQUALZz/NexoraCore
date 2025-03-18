@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 from dishka.integrations.fastapi import setup_dishka as setup_dishka_fastapi
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import clear_mappers
 
 from app.application.api.v1.auth.handlers import router as auth_router
@@ -53,5 +54,15 @@ def create_app() -> FastAPI:
 
     app.include_router(user_router)
     app.include_router(auth_router)
+
+    app.add_middleware(
+        CORSMiddleware,  # type: ignore
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "OPTIONS", "DELETE", "PATCH", "PUT"],
+        allow_headers=["Content-Type", "Set-Cookie", "Access-Control-Allow-Headers",
+                       "Access-Control-Allow-Origin",
+                       "Authorization", "Cache-Control"]
+    )
 
     return app

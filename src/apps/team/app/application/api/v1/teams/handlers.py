@@ -1,17 +1,18 @@
 import logging
 from uuid import UUID
-from fastapi import APIRouter, HTTPException
+
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
+from fastapi import APIRouter, Depends
 from fastapi.params import Query
 
+from app.application.api.v1.auth.dependecies import RoleChecker
 from app.application.api.v1.teams.schemas import CreateTeamSchemaRequest, TeamResponse, UpdateTeamSchemaRequest
 from app.domain.entities.team import TeamEntity
-from app.exceptions.base import ApplicationException
+from app.infrastructure.uow.teams.base import TeamsUnitOfWork
 from app.logic.bootstrap import Bootstrap
 from app.logic.commands.team import CreateTeamCommand, DeleteTeamCommand, UpdateTeamCommand
 from app.logic.message_bus import MessageBus
 from app.logic.types.handlers import EventHandlerMapping, CommandHandlerMapping
-from app.infrastructure.uow.teams.base import TeamsUnitOfWork
 from app.logic.views.teams import TeamsView
 
 router = APIRouter(tags=["teams"], route_class=DishkaRoute)
@@ -22,6 +23,7 @@ logger = logging.getLogger(__name__)
     "/",
     status_code=201,
     description="Handler for creating a new team",
+    dependencies=[Depends(RoleChecker(allowed_roles=["admin"]))]
 )
 async def create_team(
         schema: CreateTeamSchemaRequest,
@@ -29,19 +31,15 @@ async def create_team(
         events: FromDishka[EventHandlerMapping],
         commands: FromDishka[CommandHandlerMapping]
 ) -> TeamResponse:
-    try:
-        bootstrap: Bootstrap = Bootstrap(
-            uow=uow, events_handlers_for_injection=events, commands_handlers_for_injection=commands
-        )
+    bootstrap: Bootstrap = Bootstrap(
+        uow=uow, events_handlers_for_injection=events, commands_handlers_for_injection=commands
+    )
 
-        messagebus: MessageBus = await bootstrap.get_messagebus()
+    messagebus: MessageBus = await bootstrap.get_messagebus()
 
-        await messagebus.handle(CreateTeamCommand(**schema.model_dump()))
+    await messagebus.handle(CreateTeamCommand(**schema.model_dump()))
 
-        return TeamResponse.from_entity(messagebus.command_result)
-
-    except ApplicationException as e:
-        raise HTTPException(status_code=e.status, detail=str(e))
+    return TeamResponse.from_entity(messagebus.command_result)
 
 
 @router.get(
@@ -54,13 +52,9 @@ async def get_all_teams(
         page_number: int = Query(1, ge=1, description="Number of page"),
         page_size: int = Query(10, ge=1, description="Size of page")
 ) -> list[TeamResponse]:
-    try:
-        teams_view: TeamsView = TeamsView(uow=uow)
-        teams: list[TeamEntity] = await teams_view.get_all_teams(page_number=page_number, page_size=page_size)
-        return [TeamResponse.from_entity(x) for x in teams]
-    except ApplicationException as e:
-        logger.error(e)
-        raise HTTPException(status_code=e.status, detail=str(e))
+    teams_view: TeamsView = TeamsView(uow=uow)
+    teams: list[TeamEntity] = await teams_view.get_all_teams(page_number=page_number, page_size=page_size)
+    return [TeamResponse.from_entity(x) for x in teams]
 
 
 @router.get(
@@ -72,13 +66,9 @@ async def get_team(
         uow: FromDishka[TeamsUnitOfWork],
         team_id: UUID
 ) -> TeamResponse:
-    try:
-        teams_view: TeamsView = TeamsView(uow=uow)
-        team = await teams_view.get_team_by_id(str(team_id))
-        return TeamResponse.from_entity(team)
-    except ApplicationException as e:
-        logger.error(e)
-        raise HTTPException(status_code=e.status, detail=str(e))
+    teams_view: TeamsView = TeamsView(uow=uow)
+    team = await teams_view.get_team_by_id(str(team_id))
+    return TeamResponse.from_entity(team)
 
 
 @router.put(
@@ -93,19 +83,15 @@ async def update_team(
         events: FromDishka[EventHandlerMapping],
         commands: FromDishka[CommandHandlerMapping]
 ) -> TeamResponse:
-    try:
-        bootstrap: Bootstrap = Bootstrap(
-            uow=uow, events_handlers_for_injection=events, commands_handlers_for_injection=commands
-        )
+    bootstrap: Bootstrap = Bootstrap(
+        uow=uow, events_handlers_for_injection=events, commands_handlers_for_injection=commands
+    )
 
-        messagebus: MessageBus = await bootstrap.get_messagebus()
+    messagebus: MessageBus = await bootstrap.get_messagebus()
 
-        await messagebus.handle(UpdateTeamCommand(**{"oid": str(oid), **schema.model_dump()}))
+    await messagebus.handle(UpdateTeamCommand(**{"oid": str(oid), **schema.model_dump()}))
 
-        return TeamResponse.from_entity(messagebus.command_result)
-
-    except ApplicationException as e:
-        raise HTTPException(status_code=e.status, detail=str(e))
+    return TeamResponse.from_entity(messagebus.command_result)
 
 
 @router.delete(
@@ -119,17 +105,12 @@ async def delete_team(
         commands: FromDishka[CommandHandlerMapping],
         team_id: UUID
 ) -> None:
-    try:
-        bootstrap: Bootstrap = Bootstrap(
-            uow=uow, events_handlers_for_injection=events, commands_handlers_for_injection=commands
-        )
+    bootstrap: Bootstrap = Bootstrap(
+        uow=uow, events_handlers_for_injection=events, commands_handlers_for_injection=commands
+    )
 
-        messagebus: MessageBus = await bootstrap.get_messagebus()
+    messagebus: MessageBus = await bootstrap.get_messagebus()
 
-        await messagebus.handle(DeleteTeamCommand(oid=str(team_id)))
+    await messagebus.handle(DeleteTeamCommand(oid=str(team_id)))
 
-        return messagebus.command_result
-
-    except ApplicationException as e:
-        logger.error(e)
-        raise HTTPException(status_code=e.status, detail=str(e))
+    return messagebus.command_result

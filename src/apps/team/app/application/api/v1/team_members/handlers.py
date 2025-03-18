@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Query
 
 from app.application.api.v1.team_members.schemas import CreateTeamMemberSchemaRequest, TeamMemberSchemaResponse
 from app.domain.entities.team_members import TeamMemberEntity
-from app.exceptions.base import ApplicationException
+from app.exceptions.base import BaseAppException
 from app.infrastructure.uow.teams.base import TeamsUnitOfWork
 from app.logic.bootstrap import Bootstrap
 from app.logic.commands.team_members import CreateTeamMemberCommand, DeleteTeamMemberCommand
@@ -44,7 +44,7 @@ async def create_team_member(
 
         return TeamMemberSchemaResponse.from_entity(messagebus.command_result)
 
-    except ApplicationException as e:
+    except BaseAppException as e:
         logger.error(e)
         raise HTTPException(status_code=e.status, detail=str(e.message))
 
@@ -69,7 +69,7 @@ async def get_all_team_members(
         )
 
         return [TeamMemberSchemaResponse.from_entity(x) for x in all_team_members]
-    except ApplicationException as e:
+    except BaseAppException as e:
         logger.error(e)
         raise HTTPException(status_code=e.status, detail=str(e.message))
 
@@ -88,7 +88,7 @@ async def get_user_info(
         team_members_view: TeamMembersView = TeamMembersView(uow=uow)
         user: TeamMemberEntity = await team_members_view.get_by_user_id(team_id=str(team_id), user_id=str(user_id))
         return TeamMemberSchemaResponse.from_entity(user)
-    except ApplicationException as e:
+    except BaseAppException as e:
         logger.error(e)
         raise HTTPException(status_code=e.status, detail=str(e.message))
 
@@ -118,7 +118,7 @@ async def delete_team_member(
 
         return messagebus.command_result
 
-    except ApplicationException as e:
+    except BaseAppException as e:
         logger.error(e)
         raise HTTPException(status_code=e.status, detail=str(e.message))
 
