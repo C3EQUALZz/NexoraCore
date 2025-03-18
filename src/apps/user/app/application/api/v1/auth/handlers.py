@@ -3,7 +3,7 @@ from typing import Annotated
 
 from authx import AuthX, TokenPayload
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from starlette import status
 
@@ -11,7 +11,6 @@ from app.application.api.v1.auth.dependencies import get_access_token_payload, g
 from app.application.api.v1.auth.schemas import TokenResponse
 from app.application.api.v1.users.schemas import UserSchemaResponse
 from app.domain.entities.user import UserEntity
-from app.exceptions.base import BaseAppException
 from app.infrastructure.cache.base import BaseCache
 from app.infrastructure.uow.users.base import UsersUnitOfWork
 from app.logic.bootstrap import Bootstrap
@@ -39,7 +38,7 @@ async def login(
     user: UserEntity = messagebus.command_result
 
     return TokenResponse(
-        access_token=security.create_access_token(uid=str(user.oid)),
+        access_token=security.create_access_token(uid=str(user.oid), data={"role": user.role}),
         refresh_token=security.create_refresh_token(uid=str(user.oid)),
     )
 

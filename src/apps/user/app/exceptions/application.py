@@ -1,7 +1,7 @@
+from dataclasses import dataclass
 from http import HTTPStatus
 
 from app.exceptions.base import BaseAppException
-from dataclasses import dataclass
 
 
 @dataclass(eq=False)
@@ -14,6 +14,10 @@ class ApplicationException(BaseAppException):
     def status(self) -> int:
         return HTTPStatus.INTERNAL_SERVER_ERROR.value
 
+    @property
+    def headers(self) -> dict[str, str] | None:
+        return None
+
 
 @dataclass(eq=False)
 class EmptyCredentialsException(ApplicationException):
@@ -25,6 +29,10 @@ class EmptyCredentialsException(ApplicationException):
     def status(self) -> int:
         return HTTPStatus.BAD_REQUEST.value
 
+    @property
+    def headers(self) -> dict[str, str] | None:
+        return {"WWW-Authenticate": "Bearer"}
+
 
 @dataclass(eq=False)
 class ForbiddenTokenException(ApplicationException):
@@ -35,6 +43,10 @@ class ForbiddenTokenException(ApplicationException):
     @property
     def status(self) -> int:
         return HTTPStatus.FORBIDDEN.value
+
+    @property
+    def headers(self) -> dict[str, str] | None:
+        return {"WWW-Authenticate": "Bearer"}
 
 
 @dataclass(eq=False)
@@ -48,3 +60,19 @@ class AuthException(ApplicationException):
     @property
     def status(self) -> int:
         return HTTPStatus.FORBIDDEN.value
+
+    @property
+    def headers(self) -> dict[str, str] | None:
+        return {"WWW-Authenticate": "Bearer"}
+
+
+@dataclass(eq=False)
+class RolePermissionDenyException(ApplicationException):
+
+    @property
+    def message(self) -> str:
+        return "You don't have enough permissions"
+
+    @property
+    def status(self) -> int:
+        return HTTPStatus.UNAUTHORIZED.value

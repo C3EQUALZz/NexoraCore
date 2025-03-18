@@ -6,10 +6,13 @@ from fastapi import Depends
 from fastapi.security import HTTPBearer
 from fastapi.security.http import HTTPAuthorizationCredentials
 
+from app.domain.entities.user import UserEntity
 from app.exceptions.application import EmptyCredentialsException, ForbiddenTokenException, \
-    AuthException
+    AuthException, RolePermissionDenyException
 from app.infrastructure.cache.base import BaseCache
+from app.infrastructure.uow.users.base import UsersUnitOfWork
 from app.logic.container import container
+from app.logic.views.users import UsersViews
 
 logger = logging.getLogger(__name__)
 http_bearer = HTTPBearer(auto_error=False)
@@ -59,3 +62,19 @@ async def get_refresh_token_payload(credentials: HTTPAuthorizationCredentials = 
 
     except AuthXException as e:
         raise AuthException(str(e))
+
+
+class RoleChecker:
+    def __init__(self, allowed_roles: list[str]) -> None:
+        self._allowed_roles: list[str] = allowed_roles
+
+    async def __call__(self, token: TokenPayload = Depends(get_access_token_payload)) -> bool:
+        uow: UsersUnitOfWork = await container.get(UsersUnitOfWork)
+
+        users_views: UsersViews = UsersViews(uow=uow)
+        user: UserEntity = await users_views.get_user_by_id(token.sub)
+
+        if user.role in self._allowed_roles:
+            return True
+
+        raise RolePermissionDenyException

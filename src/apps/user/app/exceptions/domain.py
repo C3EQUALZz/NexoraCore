@@ -15,6 +15,10 @@ class DomainException(BaseAppException, ABC):
     def status(self) -> int:
         return HTTPStatus.UNPROCESSABLE_ENTITY.value
 
+    @property
+    def headers(self) -> dict[str, str] | None:
+        return None
+
 
 @dataclass(eq=False)
 class CastException(DomainException):
@@ -103,6 +107,7 @@ class UnExistingGenderException(DomainException):
     @property
     def message(self) -> str:
         return f"Gender {self.value} does not exist, please choose male or female"
+
 
 @dataclass(eq=False)
 class UnExistingPlatform(DomainException):

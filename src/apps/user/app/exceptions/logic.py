@@ -11,6 +11,10 @@ class LogicException(BaseAppException, ABC):
     def message(self) -> str:
         return "An logic error has occurred"
 
+    @property
+    def headers(self) -> dict[str, str] | None:
+        return None
+
 
 @dataclass(eq=False)
 class MessageBusMessageException(LogicException):

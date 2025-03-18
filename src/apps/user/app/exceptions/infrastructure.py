@@ -14,6 +14,10 @@ class InfrastructureException(BaseAppException, ABC):
     def status(self) -> int:
         return HTTPStatus.INTERNAL_SERVER_ERROR.value
 
+    @property
+    def headers(self) -> dict[str, str] | None:
+        return None
+
 
 @dataclass(eq=False)
 class ConvertingException(InfrastructureException):
