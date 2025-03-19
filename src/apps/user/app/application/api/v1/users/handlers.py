@@ -43,7 +43,6 @@ async def get_users(
 @router.get(
     "/{user_id}/",
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(RoleChecker(allowed_roles=["admin", "staffer", "manager"]))]
 )
 async def get_user(
         user_id: UUID,

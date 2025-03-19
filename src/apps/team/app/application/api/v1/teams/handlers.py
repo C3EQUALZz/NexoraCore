@@ -46,6 +46,7 @@ async def create_team(
     "/",
     status_code=200,
     description="Handler for getting all teams",
+    dependencies=[Depends(RoleChecker(allowed_roles=["admin", "staffer", "manager"]))]
 )
 async def get_all_teams(
         uow: FromDishka[TeamsUnitOfWork],
@@ -61,6 +62,7 @@ async def get_all_teams(
     "/{team_id}/",
     status_code=200,
     description="Handler for getting info about team",
+    dependencies=[Depends(RoleChecker(allowed_roles=["admin", "staffer", "manager"]))]
 )
 async def get_team(
         uow: FromDishka[TeamsUnitOfWork],
@@ -75,6 +77,7 @@ async def get_team(
     "/{team_id}/",
     status_code=200,
     description="Handler for updating info about team",
+    dependencies=[Depends(RoleChecker(allowed_roles=["admin"]))]
 )
 async def update_team(
         oid: UUID,
@@ -98,6 +101,7 @@ async def update_team(
     "/{team_id}/",
     status_code=204,
     description="Handler for deleting info about team",
+    dependencies=[Depends(RoleChecker(allowed_roles=["admin"]))]
 )
 async def delete_team(
         uow: FromDishka[TeamsUnitOfWork],

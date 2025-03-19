@@ -74,7 +74,7 @@ class RoleChecker:
         users_views: UsersViews = UsersViews(uow=uow)
         user: UserEntity = await users_views.get_user_by_id(token.sub)
 
-        if user.role in self._allowed_roles:
+        if user.role.as_generic_type() in self._allowed_roles:
             return True
 
         raise RolePermissionDenyException

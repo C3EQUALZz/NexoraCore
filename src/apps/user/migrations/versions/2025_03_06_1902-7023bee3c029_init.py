@@ -34,7 +34,7 @@ def upgrade() -> None:
     sa.Column('patronymic', sa.String(length=100), nullable=True),
     sa.Column('email', EmailTypeDecorator(length=100), nullable=False),
     sa.Column('password', PasswordTypeDecorator(length=50), nullable=False),
-    sa.Column('role', RoleDecorator(length=5), nullable=False),
+    sa.Column('role', RoleDecorator(length=15), nullable=False),
     sa.Column('status', StatusDecorator(length=10), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),

@@ -38,7 +38,7 @@ async def login(
     user: UserEntity = messagebus.command_result
 
     return TokenResponse(
-        access_token=security.create_access_token(uid=str(user.oid), data={"role": user.role.as_generic_type()}),
+        access_token=security.create_access_token(uid=str(user.oid)),
         refresh_token=security.create_refresh_token(uid=str(user.oid)),
     )
 

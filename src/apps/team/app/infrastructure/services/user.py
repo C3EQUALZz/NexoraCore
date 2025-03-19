@@ -12,8 +12,8 @@ class UserClientService:
         self._url = url
         self._client = client
 
-    async def get_user_role(self, user_oid: str, creds: str, scheme: str) -> str:
-        user_json = await self.get_user(user_oid, creds, scheme)
+    async def get_user_role(self, user_oid: str) -> str:
+        user_json = await self.get_user(user_oid)
 
         if user_json is None:
             raise EmptyJsonResponseException
@@ -26,21 +26,16 @@ class UserClientService:
 
     async def get_user(
             self,
-            user_oid: str,
-            creds: str,
-            scheme: str
+            user_oid: str
     ) -> dict[str, ...] | None:
         """Получить пользователя, если он есть на микросервисе Users через httpx."""
         try:
 
             url: str = self._url + f"/{user_oid}/"
 
-            response = await self._client.get(
-                url=url,
-                headers={"Authorization": " ".join((scheme, creds))}
-            )
+            response = await self._client.get(url=url)
 
-            logger.error("making response for user: %s, url: %s, headers: %s", user_oid, url, " ".join((scheme, creds)))
+            logger.info("Making response: %s", url)
 
             response.raise_for_status()  # Проверка на HTTP ошибки.
 
