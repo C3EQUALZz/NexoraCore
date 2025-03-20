@@ -25,3 +25,16 @@ class MessageBusMessageException(LogicException):
     @property
     def status(self) -> int:
         return HTTPStatus.BAD_REQUEST.value
+
+
+@dataclass(eq=False)
+class UserDoesntExistException(LogicException):
+    value: str
+
+    @property
+    def message(self) -> str:
+        return f"User with oid: {self.value} doesn't exist, please peek a real id"
+
+    @property
+    def status(self) -> int:
+        return HTTPStatus.NOT_FOUND.value

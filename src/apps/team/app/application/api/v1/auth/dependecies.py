@@ -5,6 +5,7 @@ from authx.exceptions import AuthXException
 from fastapi import Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
+from app.domain.entities.user import UserEntity
 from app.exceptions.application import RolePermissionDenyException, EmptyCredentialsException, AuthException
 from app.infrastructure.services.user import UserClientService
 from app.logic.container import container
@@ -44,8 +45,9 @@ class RoleChecker:
     ) -> bool:
 
         user_service: UserClientService = await container.get(UserClientService)
+        user: UserEntity = await user_service.get_user(token.sub)
 
-        if await user_service.get_user_role(token.sub) in self._allowed_roles:
+        if user.role.as_generic_type() in self._allowed_roles:
             return True
 
         raise RolePermissionDenyException

@@ -20,7 +20,6 @@ class CreateTeamCommandHandler(TeamsCommandHandler[CreateTeamCommand]):
         return await teams_service.add(new_team)
 
 
-
 class UpdateTeamCommandHandler(TeamsCommandHandler[UpdateTeamCommand]):
     @override
     async def __call__(self, command: UpdateTeamCommand) -> TeamEntity:
@@ -37,7 +36,6 @@ class UpdateTeamCommandHandler(TeamsCommandHandler[UpdateTeamCommand]):
         updated_team.oid = old_team.oid
 
         return await teams_service.update(command.oid, updated_team)
-
 
 
 class DeleteTeamCommandHandler(TeamsCommandHandler[DeleteTeamCommand]):

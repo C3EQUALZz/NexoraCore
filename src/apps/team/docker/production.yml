@@ -19,6 +19,8 @@ services:
     networks:
       - team-service
       - microservices-network
+    volumes:
+      - team_service_logs:/app/resources/logs
 
   mongodb-app-team:
     container_name: mongodb-app-team
@@ -65,6 +67,7 @@ services:
 volumes:
   mongodb_data_users:
   redis_data_users:
+  team_service_logs:
 
 networks:
   team-service:

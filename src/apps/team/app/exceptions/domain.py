@@ -84,3 +84,10 @@ class InvalidPartNameException(DomainException):
     @property
     def message(self) -> str:
         return f"The provided value was invalid: {self.value}. Please write normal part of name"
+
+
+@dataclass(eq=False)
+class RoleException(DomainException):
+    @property
+    def message(self) -> str:
+        return "Role does not exist. Please choose admin or staffer, manager"

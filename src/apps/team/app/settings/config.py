@@ -49,15 +49,6 @@ class RedisSettings(CommonSettings):
         return RedisDsn(f"redis://:{self.password}@{self.host}:{self.port}")
 
 
-class AdminSettings(CommonSettings):
-    email: str = Field(alias="ADMIN_EMAIL")
-    surname: str = Field(alias="ADMIN_SURNAME")
-    name: str = Field(alias="ADMIN_NAME")
-    patronymic: str = Field(alias="ADMIN_PATRONYMIC")
-    password: str = Field(alias="ADMIN_PASSWORD")
-    telegram_uri: str = Field(alias="ADMIN_TELEGRAM_URI")
-
-
 class AuthSettings(CommonSettings):
     public_key: str = Field(alias="PUBLIC_KEY")
     algorithm: str = Field(default="RS256", alias="ALGORITHM")
@@ -75,6 +66,15 @@ class HttpxSettings(CommonSettings):
     )
 
 
+class BrokerSettings(CommonSettings):
+    host: str = Field(alias="BROKER_HOST")
+    port: int = Field(alias="BROKER_PORT_NETWORK")
+
+    @property
+    def url(self) -> str:
+        return f"{self.host}:{self.port}"
+
+
 class Settings(CommonSettings):
     """
     Класс настроек, которым в дальнейшем будет оперировать приложение.
@@ -82,9 +82,9 @@ class Settings(CommonSettings):
 
     database: DatabaseSettings = DatabaseSettings()
     cache: RedisSettings = RedisSettings()
-    admin: AdminSettings = AdminSettings()
     client: HttpxSettings = HttpxSettings()
     auth: AuthSettings = AuthSettings()
+    broker: BrokerSettings = BrokerSettings()
 
 
 @lru_cache(1)

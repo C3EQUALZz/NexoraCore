@@ -11,7 +11,7 @@ from app.infrastructure.repositories.team_members.base import TeamMembersReposit
 class MotorTeamMembersRepository(MotorAbstractRepository, TeamMembersRepository):
     @override
     async def get_by_user_id(self, team_id: str, user_id: str) -> TeamMemberEntity | None:
-        team_member = await self._collection.find_one(filter={"team_id":team_id, "user_id": user_id})
+        team_member = await self._collection.find_one(filter={"team_id": team_id, "user_id": user_id})
         return TeamMemberEntity.from_document(team_member) if team_member else None
 
     @override
@@ -49,10 +49,16 @@ class MotorTeamMembersRepository(MotorAbstractRepository, TeamMembersRepository)
     async def get_all_members_in_team(
             self,
             team_id: str,
-            start: int = 0,
-            limit: int = 10
+            start: int | None = None,
+            limit: int | None = None
     ) -> builtins.list[TeamMemberEntity]:
-        cursor: AsyncIOMotorCursor[Any] = self._collection.find(filter={"team_id": team_id}).skip(start).limit(limit)
+        cursor: AsyncIOMotorCursor[Any] = self._collection.find(filter={"team_id": team_id})
+
+        if start is not None:
+            cursor = cursor.skip(start)
+        if limit is not None:
+            cursor = cursor.limit(limit)
+
         team_members: list[Mapping[str, Any]] = await cursor.to_list(length=limit)
         return [TeamMemberEntity.from_document(user) for user in team_members]
 

@@ -7,16 +7,21 @@ from fastapi import FastAPI
 from app.application.api.v1.team_members.handlers import router as team_members_router
 from app.application.api.v1.teams.handlers import router as teams_router
 from app.application.api.v1.utils.handlers import register_exception_handlers
+from app.infrastructure.brokers.base import BaseMessageBroker
 from app.logic.container import container
+from app.settings.logger.config import setup_logging
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    broker: BaseMessageBroker = await container.get(BaseMessageBroker)
     # cache.pool = await container.get(ConnectionPool)
     # cache.client = await container.get(Redis)
+    await broker.start()
 
     yield
 
+    await broker.close()
     await app.state.dishka_container.close()
 
 
@@ -29,6 +34,7 @@ def create_app() -> FastAPI:
         lifespan=lifespan
     )
 
+    setup_logging()
     register_exception_handlers(app)
 
     setup_dishka_fastapi(container=container, app=app)

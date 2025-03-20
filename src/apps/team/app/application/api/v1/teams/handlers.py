@@ -12,7 +12,6 @@ from app.infrastructure.uow.teams.base import TeamsUnitOfWork
 from app.logic.bootstrap import Bootstrap
 from app.logic.commands.team import CreateTeamCommand, DeleteTeamCommand, UpdateTeamCommand
 from app.logic.message_bus import MessageBus
-from app.logic.types.handlers import EventHandlerMapping, CommandHandlerMapping
 from app.logic.views.teams import TeamsView
 
 router = APIRouter(tags=["teams"], route_class=DishkaRoute)
@@ -27,14 +26,8 @@ logger = logging.getLogger(__name__)
 )
 async def create_team(
         schema: CreateTeamSchemaRequest,
-        uow: FromDishka[TeamsUnitOfWork],
-        events: FromDishka[EventHandlerMapping],
-        commands: FromDishka[CommandHandlerMapping]
+        bootstrap: FromDishka[Bootstrap[TeamsUnitOfWork]]
 ) -> TeamResponse:
-    bootstrap: Bootstrap = Bootstrap(
-        uow=uow, events_handlers_for_injection=events, commands_handlers_for_injection=commands
-    )
-
     messagebus: MessageBus = await bootstrap.get_messagebus()
 
     await messagebus.handle(CreateTeamCommand(**schema.model_dump()))
@@ -82,14 +75,8 @@ async def get_team(
 async def update_team(
         oid: UUID,
         schema: UpdateTeamSchemaRequest,
-        uow: FromDishka[TeamsUnitOfWork],
-        events: FromDishka[EventHandlerMapping],
-        commands: FromDishka[CommandHandlerMapping]
+        bootstrap: FromDishka[Bootstrap[TeamsUnitOfWork]]
 ) -> TeamResponse:
-    bootstrap: Bootstrap = Bootstrap(
-        uow=uow, events_handlers_for_injection=events, commands_handlers_for_injection=commands
-    )
-
     messagebus: MessageBus = await bootstrap.get_messagebus()
 
     await messagebus.handle(UpdateTeamCommand(**{"oid": str(oid), **schema.model_dump()}))
@@ -104,15 +91,9 @@ async def update_team(
     dependencies=[Depends(RoleChecker(allowed_roles=["admin"]))]
 )
 async def delete_team(
-        uow: FromDishka[TeamsUnitOfWork],
-        events: FromDishka[EventHandlerMapping],
-        commands: FromDishka[CommandHandlerMapping],
+        bootstrap: FromDishka[Bootstrap[TeamsUnitOfWork]],
         team_id: UUID
 ) -> None:
-    bootstrap: Bootstrap = Bootstrap(
-        uow=uow, events_handlers_for_injection=events, commands_handlers_for_injection=commands
-    )
-
     messagebus: MessageBus = await bootstrap.get_messagebus()
 
     await messagebus.handle(DeleteTeamCommand(oid=str(team_id)))

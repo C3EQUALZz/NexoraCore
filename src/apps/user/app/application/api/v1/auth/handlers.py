@@ -48,7 +48,6 @@ async def login(
     status_code=status.HTTP_200_OK,
     response_model_exclude_none=True,
     summary="Endpoint for user refreshing",
-    dependencies=[Depends(RoleChecker(allowed_roles=["staffer", "admin", "manager"]))],
 )
 async def refresh(
         security: FromDishka[AuthX],
