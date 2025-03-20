@@ -63,7 +63,20 @@ class TeamMembersService:
 
             return await uow.team_members.delete_by_user_id_and_team_id(team_id=team_id, user_id=user_id)
 
-    async def get_all_in_team(self, team_id: str, start: int = 0, limit: int = 10) -> list[TeamMemberEntity]:
+    @overload
+    async def get_all_in_team(self, team_id: str) -> list[TeamMemberEntity]:
+        ...
+
+    @overload
+    async def get_all_in_team(self, team_id: str, start: int | None, limit: int | None) -> list[TeamMemberEntity]:
+        ...
+
+    async def get_all_in_team(
+            self,
+            team_id: str,
+            start: int | None = None,
+            limit: int | None = None
+    ) -> list[TeamMemberEntity]:
         async with self._uow as uow:
             return await uow.team_members.get_all_members_in_team(team_id=team_id, start=start, limit=limit)
 

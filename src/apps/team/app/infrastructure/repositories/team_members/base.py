@@ -47,7 +47,7 @@ class TeamMembersRepository(AbstractRepository[TeamMemberEntity], ABC):
     async def get_all_members_in_team(
             self,
             team_id: str,
-            start: int = 0,
-            limit: int = 10
+            start: int | None = None,
+            limit: int | None = None
     ) -> builtins.list[TeamMemberEntity]:
         raise NotImplementedError

@@ -7,14 +7,13 @@ from dishka.integrations.fastapi import (
 )
 from fastapi import (
     APIRouter,
-    HTTPException,
-    Query
+    Query, Depends
 )
 from starlette import status
 
+from app.application.api.v1.auth.dependencies import RoleChecker
 from app.application.api.v1.users.schemas import UserSchemaResponse, CreateUserSchemaRequest, UpdateUserSchemaRequest
 from app.domain.entities.user import UserEntity
-from app.exceptions.base import ApplicationException
 from app.exceptions.infrastructure import UserNotFoundException
 from app.infrastructure.uow.users.base import UsersUnitOfWork
 from app.logic.bootstrap import Bootstrap
@@ -29,21 +28,16 @@ logger = logging.getLogger(__name__)
 @router.get(
     "/",
     status_code=status.HTTP_200_OK,
+    dependencies=[Depends(RoleChecker(allowed_roles=["admin", "staffer", "manager"]))],
 )
 async def get_users(
         uow: FromDishka[UsersUnitOfWork],
         page: int = Query(1, ge=1, description="Номер страницы"),
         size: int = Query(10, ge=1, le=100, description="Размер страницы")
 ) -> list[UserSchemaResponse]:
-    try:
-
-        users_views: UsersViews = UsersViews(uow=uow)
-        users: list[UserEntity] = await users_views.get_all_users(page_number=page, page_size=size)
-        return [UserSchemaResponse.from_entity(entity=entity) for entity in users]
-
-    except ApplicationException as e:
-        logger.error(e.message)
-        raise HTTPException(status_code=e.status, detail=str(e))
+    users_views: UsersViews = UsersViews(uow=uow)
+    users: list[UserEntity] = await users_views.get_all_users(page_number=page, page_size=size)
+    return [UserSchemaResponse.from_entity(entity=entity) for entity in users]
 
 
 @router.get(
@@ -54,15 +48,9 @@ async def get_user(
         user_id: UUID,
         uow: FromDishka[UsersUnitOfWork],
 ) -> UserSchemaResponse:
-    try:
-
-        users_views: UsersViews = UsersViews(uow=uow)
-        user: UserEntity = await users_views.get_user_by_id(str(user_id))
-        return UserSchemaResponse.from_entity(entity=user)
-
-    except ApplicationException as e:
-        logger.error(e.message)
-        raise HTTPException(status_code=e.status, detail=str(e))
+    users_views: UsersViews = UsersViews(uow=uow)
+    user: UserEntity = await users_views.get_user_by_id(str(user_id))
+    return UserSchemaResponse.from_entity(entity=user)
 
 
 @router.post(
@@ -76,35 +64,25 @@ async def create_user(
         scheme: CreateUserSchemaRequest,
         bootstrap: FromDishka[Bootstrap[UsersUnitOfWork]]
 ) -> UserSchemaResponse:
-    try:
-        messagebus: MessageBus = await bootstrap.get_messagebus()
+    messagebus: MessageBus = await bootstrap.get_messagebus()
 
-        await messagebus.handle(CreateUserCommand(**scheme.model_dump()))
+    await messagebus.handle(CreateUserCommand(**scheme.model_dump()))
 
-        return UserSchemaResponse.from_entity(messagebus.command_result)
-
-    except ApplicationException as e:
-        raise HTTPException(status_code=e.status, detail=str(e))
+    return UserSchemaResponse.from_entity(messagebus.command_result)
 
 
 @router.patch(
     "/{user_id}/",
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(RoleChecker(allowed_roles=["admin", "staffer"]))],
 )
 async def update_user(
         scheme: UpdateUserSchemaRequest,
         bootstrap: FromDishka[Bootstrap[UsersUnitOfWork]],
 ) -> UserSchemaResponse:
-    try:
-
-        messagebus: MessageBus = await bootstrap.get_messagebus()
-
-        await messagebus.handle(UpdateUserCommand(**scheme.model_dump()))
-
-        return UserSchemaResponse.from_entity(messagebus.command_result)
-
-    except ApplicationException as e:
-        raise HTTPException(status_code=e.status, detail=str(e))
+    messagebus: MessageBus = await bootstrap.get_messagebus()
+    await messagebus.handle(UpdateUserCommand(**scheme.model_dump()))
+    return UserSchemaResponse.from_entity(messagebus.command_result)
 
 
 @router.delete(
@@ -113,16 +91,12 @@ async def update_user(
     responses={
         status.HTTP_404_NOT_FOUND: {"model": UserNotFoundException},
     },
+    dependencies=[Depends(RoleChecker(allowed_roles=["admin", "staffer"]))]
 )
 async def delete_user(
         user_id: UUID,
         bootstrap: FromDishka[Bootstrap[UsersUnitOfWork]]
 ) -> None:
-    try:
-        messagebus: MessageBus = await bootstrap.get_messagebus()
-        await messagebus.handle(DeleteUserCommand(oid=str(user_id)))
-
-        return messagebus.command_result
-
-    except ApplicationException as e:
-        raise HTTPException(status_code=e.status, detail=e.message)
+    messagebus: MessageBus = await bootstrap.get_messagebus()
+    await messagebus.handle(DeleteUserCommand(oid=str(user_id)))
+    return messagebus.command_result

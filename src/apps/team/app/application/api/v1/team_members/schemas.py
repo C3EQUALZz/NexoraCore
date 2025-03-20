@@ -13,15 +13,15 @@ StringUUID = Annotated[
     ),
 ]
 
+
 class CreateTeamMemberSchemaRequest(BaseModel):
     user_id: StringUUID
-    position: str
     superiors: list[StringUUID] = Field(default_factory=list)
     subordinates: list[StringUUID] = Field(default_factory=list)
 
+
 class TeamMemberSchemaResponse(BaseModel):
     user_id: StringUUID
-    position: str
     superiors: list[StringUUID]
     subordinates: list[StringUUID]
 
@@ -29,9 +29,12 @@ class TeamMemberSchemaResponse(BaseModel):
     def from_entity(cls, member: TeamMemberEntity) -> Self:
         return cls(
             user_id=UUID(member.user_id),
-            position=member.position.as_generic_type(),
             superiors=[UUID(x) for x in member.superiors_ids],
             subordinates=[UUID(x) for x in member.subordinates_ids],
         )
 
 
+class CreateNewTidingRequestSchema(BaseModel):
+    name: str
+    description: str
+    text: str

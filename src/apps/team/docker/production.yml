@@ -12,15 +12,17 @@ services:
     env_file:
       - ../.env
     depends_on:
-      mongo:
+      mongodb-app-team:
         condition: service_healthy
-      redis:
+      redis-app-team:
         condition: service_healthy
     networks:
       - team-service
       - microservices-network
+    volumes:
+      - team_service_logs:/app/resources/logs
 
-  mongo:
+  mongodb-app-team:
     container_name: mongodb-app-team
     image: mongo:7.0.0-jammy
     restart: unless-stopped
@@ -43,7 +45,7 @@ services:
     networks:
       - team-service
 
-  redis:
+  redis-app-team:
     container_name: redis-app-team
     image: redis:6.2-alpine
     restart: unless-stopped
@@ -65,6 +67,7 @@ services:
 volumes:
   mongodb_data_users:
   redis_data_users:
+  team_service_logs:
 
 networks:
   team-service:

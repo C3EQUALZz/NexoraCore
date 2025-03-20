@@ -16,8 +16,6 @@ async def setup_admin(uow: UsersUnitOfWork, settings: Settings) -> None:
     if not await service.check_existence(email=settings.admin.email):
         logger.info('Admin user does not exist in database, creating...')
 
-        a = Role("admin")
-
         first_admin = UserEntity(
             surname=settings.admin.surname,
             name=settings.admin.name,

@@ -16,7 +16,7 @@ users_table = Table(
     Column("patronymic", String(100)),
     Column("email", EmailTypeDecorator(100), nullable=False, unique=True),
     Column("password", PasswordTypeDecorator(50), nullable=False),
-    Column("role", RoleDecorator(5), nullable=False),
+    Column("role", RoleDecorator(15), nullable=False),
     Column("status", StatusDecorator(10), nullable=False),
     Column("created_at", DateTime(timezone=True), default=func.now()),
     Column("updated_at", DateTime(timezone=True), default=func.now(), onupdate=func.now()),

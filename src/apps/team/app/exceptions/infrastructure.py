@@ -1,11 +1,11 @@
 from dataclasses import dataclass
-from app.exceptions.base import ApplicationException
+from app.exceptions.base import BaseAppException
 from abc import ABC
 from http import HTTPStatus
 
 
 @dataclass(eq=False)
-class InfrastructureException(ApplicationException, ABC):
+class InfrastructureException(BaseAppException, ABC):
     @property
     def message(self) -> str:
         return "Infrastructure exception has occurred"
@@ -13,6 +13,10 @@ class InfrastructureException(ApplicationException, ABC):
     @property
     def status(self) -> int:
         return HTTPStatus.INTERNAL_SERVER_ERROR.value
+
+    @property
+    def headers(self) -> dict[str, str] | None:
+        return None
 
 
 @dataclass(eq=False)
@@ -86,3 +90,24 @@ class UserDoesntExistsInThisTeamException(InfrastructureException):
     def message(self) -> str:
         return f"Person with oid: {self.user_id} doesn't exists in this team: {self.team_id}"
 
+
+@dataclass(eq=False)
+class EmptyJsonResponseException(InfrastructureException):
+    @property
+    def message(self) -> str:
+        return f"Wrong request on users microservice, check availability"
+
+    @property
+    def status(self) -> int:
+        return HTTPStatus.BAD_REQUEST.value
+
+
+@dataclass(eq=False)
+class EmptyRoleFieldInJsonException(InfrastructureException):
+    @property
+    def message(self) -> str:
+        return f"User doesn't have field 'role', please check the users microservice"
+
+    @property
+    def status(self) -> int:
+        return HTTPStatus.BAD_REQUEST.value

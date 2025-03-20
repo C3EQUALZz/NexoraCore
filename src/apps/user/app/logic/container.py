@@ -2,6 +2,7 @@ import logging
 from typing import cast
 
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
+from authx import AuthXConfig, AuthX
 from dishka import (
     Provider,
     Scope,
@@ -9,7 +10,7 @@ from dishka import (
     make_async_container,
     provide,
 )
-
+from redis.asyncio import ConnectionPool, Redis
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -17,21 +18,23 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from app.logic.bootstrap import Bootstrap
-from app.logic.types.handlers import UT
-
 from app.infrastructure.brokers.base import BaseMessageBroker
 from app.infrastructure.brokers.kafka import KafkaMessageBroker
+from app.infrastructure.cache.base import BaseCache
+from app.infrastructure.cache.redis import RedisCache
 from app.infrastructure.uow.users.alchemy import SQLAlchemyUsersUnitOfWork
 from app.infrastructure.uow.users.base import UsersUnitOfWork
-from app.logic.commands.users import CreateUserCommand, UpdateUserCommand, VerifyUserCredentialsCommand, \
-    DeleteUserCommand
+from app.logic.bootstrap import Bootstrap
+from app.logic.commands.auth import VerifyUserCredentialsCommand
+from app.logic.commands.users import CreateUserCommand, UpdateUserCommand, DeleteUserCommand
 from app.logic.events.users import UserDeleteEvent
+from app.logic.handlers.auth.commands import VerifyUserCredentialsCommandHandler
 from app.logic.handlers.users.commands import CreateUserCommandHandler, UpdateUserCommandHandler, \
-    VerifyUserCredentialsCommandHandler, DeleteUserCommandHandler
+    DeleteUserCommandHandler
 from app.logic.handlers.users.events import UserDeleteEventHandler
 from app.logic.types.handlers import CommandHandlerMapping, EventHandlerMapping
-from app.settings.config import Settings
+from app.logic.types.handlers import UT
+from app.settings.config import Settings, get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -130,13 +133,43 @@ class DatabaseProvider(Provider):
         return session_maker
 
 
+class AuthProvider(Provider):
+    settings = from_context(provides=Settings, scope=Scope.APP)
+
+    @provide(scope=Scope.APP)
+    async def get_config(self, settings: Settings) -> AuthXConfig:
+        return AuthXConfig(
+            JWT_ALGORITHM="RS256",
+            JWT_DECODE_ALGORITHMS=["RS256"],
+            JWT_PRIVATE_KEY=settings.auth.private_key,
+            JWT_PUBLIC_KEY=settings.auth.public_key
+        )
+
+    @provide(scope=Scope.APP)
+    async def get_security(self, config: AuthXConfig) -> AuthX:
+        return AuthX(config=config)
+
+
+class RedisProvider(Provider):
+    settings = from_context(provides=Settings, scope=Scope.APP)
+
+    @provide(scope=Scope.APP)
+    async def get_connection_pool(self, settings: Settings) -> ConnectionPool:
+        return ConnectionPool.from_url(str(settings.cache.url), encoding="utf8", decode_responses=True)
+
+    @provide(scope=Scope.APP)
+    async def get_client(self, pool: ConnectionPool) -> BaseCache:
+        return RedisCache(Redis.from_pool(pool))
+
 
 container = make_async_container(
     DatabaseProvider(),
     HandlerProvider(),
     BrokerProvider(),
     AppProvider(),
+    AuthProvider(),
+    RedisProvider(),
     context={
-        Settings: Settings(),
+        Settings: get_settings(),
     }
 )

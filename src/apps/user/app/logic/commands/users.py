@@ -27,7 +27,4 @@ class DeleteUserCommand(AbstractCommand):
     oid: str
 
 
-@dataclass(frozen=True)
-class VerifyUserCredentialsCommand(AbstractCommand):
-    email: str
-    password: str
+

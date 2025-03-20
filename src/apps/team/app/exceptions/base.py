@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 
 @dataclass(eq=False)
-class ApplicationException(Exception, ABC):
+class BaseAppException(Exception, ABC):
     @property
     def message(self) -> str:
         raise NotImplementedError
@@ -14,6 +14,11 @@ class ApplicationException(Exception, ABC):
     @property
     @abstractmethod
     def status(self) -> int:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def headers(self) -> dict[str, str] | None:
         raise NotImplementedError
 
     def __str__(self) -> str:

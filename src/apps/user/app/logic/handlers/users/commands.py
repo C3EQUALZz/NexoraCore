@@ -1,13 +1,12 @@
-from app.exceptions.infrastructure import UserNotFoundException
-from app.exceptions.logic import UserAlreadyExistsException, InvalidPasswordException
-from app.infrastructure.services.users import UsersService
-from app.infrastructure.utils.security import hash_password, validate_password
-from app.logic.events.users import UserDeleteEvent
-from app.logic.handlers.users.base import UsersCommandHandler
-from app.logic.commands.users import CreateUserCommand, VerifyUserCredentialsCommand, UpdateUserCommand, \
-    DeleteUserCommand
 from app.domain.entities.user import UserEntity
 from app.domain.values.user import Password
+from app.exceptions.infrastructure import UserNotFoundException
+from app.exceptions.logic import UserAlreadyExistsException
+from app.infrastructure.services.users import UsersService
+from app.infrastructure.utils.security import hash_password
+from app.logic.commands.users import CreateUserCommand, UpdateUserCommand, DeleteUserCommand
+from app.logic.events.users import UserDeleteEvent
+from app.logic.handlers.users.base import UsersCommandHandler
 
 
 class CreateUserCommandHandler(UsersCommandHandler[CreateUserCommand]):
@@ -50,9 +49,7 @@ class UpdateUserCommandHandler(UsersCommandHandler[UpdateUserCommand]):
 
 class DeleteUserCommandHandler(UsersCommandHandler[DeleteUserCommand]):
     async def __call__(self, command: UpdateUserCommand) -> None:
-
         async with self._uow as uow:
-
             user_service: UsersService = UsersService(uow=uow)
 
             if not await user_service.check_existence(oid=command.oid):
@@ -67,22 +64,3 @@ class DeleteUserCommandHandler(UsersCommandHandler[DeleteUserCommand]):
             )
 
             return deleted_user
-
-
-class VerifyUserCredentialsCommandHandler(UsersCommandHandler[VerifyUserCredentialsCommand]):
-    async def __call__(self, command: VerifyUserCredentialsCommand) -> UserEntity:
-        """
-        Checks, if provided by user credentials are valid.
-        """
-        users_service: UsersService = UsersService(uow=self._uow)
-
-        user: UserEntity
-        if await users_service.check_existence(email=command.email):
-            user = await users_service.get_by_email(email=command.email)
-        else:
-            raise UserNotFoundException(command.email)
-
-        if not validate_password(password=command.password, hashed_password=user.password.as_generic_type()):
-            raise InvalidPasswordException
-
-        return user

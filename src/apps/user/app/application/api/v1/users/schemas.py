@@ -1,6 +1,6 @@
 import uuid
 from typing import Self
-from typing import cast, Annotated
+from typing import cast, Annotated, Literal
 
 from pydantic import BaseModel, EmailStr, Field, AfterValidator, UUID4
 
@@ -13,6 +13,7 @@ class UserSchemaResponse(BaseModel):
     surname: str = Field(min_length=1, max_length=40)
     patronymic: str = Field(min_length=1, max_length=40)
     email: EmailStr
+    role: Literal["staffer", "admin", "manager"]
 
     @classmethod
     def from_entity(cls, entity: UserEntity) -> Self:
@@ -21,7 +22,8 @@ class UserSchemaResponse(BaseModel):
             patronymic=entity.patronymic,
             name=entity.name,
             email=cast(EmailStr, entity.email.as_generic_type()),
-            oid=entity.oid
+            oid=entity.oid,
+            role=cast(Literal["staffer", "admin", "manager"], entity.role.as_generic_type()),
         )
 
 

@@ -51,7 +51,7 @@ class Role(BaseValueObject[str]):
 
     @override
     def validate(self) -> None:
-        if self.value not in ("admin", "user"):
+        if self.value not in ("admin", "staffer", "manager"):
             raise RoleException()
 
     @override

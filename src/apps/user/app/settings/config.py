@@ -1,4 +1,5 @@
 from abc import ABC
+from functools import lru_cache
 from pathlib import Path
 
 from pydantic import Field, RedisDsn
@@ -83,6 +84,18 @@ class BrokerSettings(CommonSettings):
         return f"{self.host}:{self.port}"
 
 
+class AuthSettings(CommonSettings):
+    """
+    Общие настройки аутентификации
+    """
+
+    private_key: str = Field(alias="PRIVATE_KEY")
+    public_key: str = Field(alias="PUBLIC_KEY")
+    algorithm: str = Field(default="RS256", alias="ALGORITHM")
+    access_token_expire_minutes: int = Field(default=5, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
+    refresh_token_expire_minutes: int = Field(default=10, alias="REFRESH_TOKEN_EXPIRE_MINUTES")
+
+
 class Settings(CommonSettings):
     """
     Класс настроек, которым в дальнейшем будет оперировать приложение.
@@ -93,3 +106,9 @@ class Settings(CommonSettings):
     cache: RedisSettings = RedisSettings()
     admin: AdminSettings = AdminSettings()
     broker: BrokerSettings = BrokerSettings()
+    auth: AuthSettings = AuthSettings()
+
+
+@lru_cache(1)
+def get_settings() -> Settings:
+    return Settings()

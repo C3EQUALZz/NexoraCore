@@ -6,21 +6,21 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-    command: "gunicorn --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 4 --timeout 120 --log-level info app.main:create_app"
+    command: ["sh", "-c", "alembic upgrade head && gunicorn --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 4 --timeout 120 --log-level info app.main:create_app"]
     ports:
       - "${API_PORT}:8000"
     env_file:
       - ../.env
     depends_on:
-      postgres:
+      postgres-app-users:
         condition: service_healthy
-      redis:
+      redis-app-users:
         condition: service_healthy
     networks:
       - user-service
       - microservices-network
 
-  postgres:
+  postgres-app-users:
     container_name: postgres-app-users
     image: postgres:16.3-alpine
     restart: unless-stopped
@@ -42,7 +42,7 @@ services:
     env_file:
       - ../.env
 
-  pgadmin:
+  pgadmin-app-users:
     image: dpage/pgadmin4:8.14.0
     container_name: pgadmin-app-users
     restart: "unless-stopped"
@@ -62,14 +62,14 @@ services:
       start_period: 10s
       retries: 5
     depends_on:
-      postgres:
+      postgres-app-users:
         condition: service_healthy
     networks:
       - user-service
     env_file:
       - ../.env
 
-  redis:
+  redis-app-users:
     container_name: redis-app-users
     image: redis:6.2-alpine
     restart: unless-stopped

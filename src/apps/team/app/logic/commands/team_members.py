@@ -7,7 +7,6 @@ from app.logic.commands.base import AbstractCommand
 class CreateTeamMemberCommand(AbstractCommand):
     user_id: str
     team_id: str
-    position: str
     superiors: list[str]
     subordinates: list[str]
 
@@ -25,3 +24,11 @@ class UpdateTeamMemberCommand(AbstractCommand):
 class DeleteTeamMemberCommand(AbstractCommand):
     user_id: str
     team_id: str
+
+
+@dataclass(frozen=True)
+class PublishNewTidingCommand(AbstractCommand):
+    team_oid: str
+    name: str
+    description: str
+    text: str

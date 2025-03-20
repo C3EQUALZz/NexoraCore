@@ -1,4 +1,8 @@
+import logging
+
 import bcrypt
+
+logger = logging.getLogger(__name__)
 
 
 def hash_password(password: str) -> bytes:
@@ -8,8 +12,8 @@ def hash_password(password: str) -> bytes:
 
 
 def validate_password(
-    password: str,
-    hashed_password: bytes,
+        password: str,
+        hashed_password: bytes,
 ) -> bool:
     return bcrypt.checkpw(
         password=password.encode(),

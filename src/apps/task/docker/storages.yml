@@ -1,0 +1,30 @@
+services:
+  mongo-task-service:
+    container_name: mongodb-app-tasks
+    image: mongo:7.0.0-jammy
+    restart: "no"
+    environment:
+      MONGO_INITDB_DATABASE: ${DATABASE_NAME}
+      MONGO_INITDB_ROOT_USERNAME: ${DATABASE_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${DATABASE_PASSWORD}
+    ports:
+      - "${DATABASE_PORT}:27017"
+    healthcheck:
+      test: [ "CMD","mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    volumes:
+      - mongodb_data_task_service:/data/db
+    env_file:
+      - ../.env
+    networks:
+      - task-service
+
+volumes:
+  mongodb_data_task_service:
+
+networks:
+  task-service:
+    driver: bridge
