@@ -1,0 +1,72 @@
+services:
+  calendar-service-app-backend:
+    restart: unless-stopped
+    container_name: calendar-service-app-backend
+    image: calendar-service-app-backend
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    command: [ "sh", "-c", "alembic upgrade head && gunicorn --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 4 --timeout 120 --log-level info app.main:create_app" ]
+    ports:
+      - "${API_PORT}:8000"
+    env_file:
+      - ../.env
+    depends_on:
+      postgres-app-calendar:
+        condition: service_healthy
+      redis-app-calendar:
+        condition: service_healthy
+    networks:
+      - calendar-service
+      - microservices-network
+
+  postgres-app-calendar:
+    container_name: postgres-app-calendar
+    image: postgres:16.3-alpine
+    restart: unless-stopped
+    ports:
+      - "${DATABASE_PORT}:5432"
+    volumes:
+      - postgres_data_calendar:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${DATABASE_USER} -d $${DATABASE_NAME}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - calendar-service
+    env_file:
+      - ../.env
+
+  redis-app-calendar:
+    container_name: redis-app-calendar
+    image: redis:6.2-alpine
+    restart: unless-stopped
+    ports:
+      - '${REDIS_PORT}:6379'
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli", "ping" ]
+      interval: 1s
+      timeout: 3s
+      retries: 5
+    command: [ "redis-server", "--appendonly yes", "--requirepass", "${REDIS_PASSWORD}" ]
+    volumes:
+      - redis_app_calendar:/data
+    env_file:
+      - ../.env
+    networks:
+      - calendar-service
+
+volumes:
+  postgres_data_calendar:
+  redis_app_calendar:
+
+networks:
+  calendar-service:
+    driver: bridge
+  microservices-network:
+    external: true
