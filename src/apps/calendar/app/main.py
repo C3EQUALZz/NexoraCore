@@ -4,9 +4,10 @@ from contextlib import asynccontextmanager
 from dishka.integrations.fastapi import setup_dishka as setup_dishka_fastapi
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+from sqlalchemy.orm import clear_mappers
 
 from app.application.api.v1.utils.handlers import register_exception_handlers
-from app.infrastructure.adapters.alchemy.orm import Base
+from app.infrastructure.adapters.alchemy.orm import metadata, start_mappers
 from app.infrastructure.brokers.base import BaseMessageBroker
 from app.logic.container import container
 from app.settings.config import get_settings, Settings
@@ -24,12 +25,15 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     engine: AsyncEngine = create_async_engine(settings.database.url)
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(metadata.create_all)
+
+    start_mappers()
 
     yield
 
     await broker.close()
     await app.state.dishka_container.close()
+    clear_mappers()
 
 
 def create_app() -> FastAPI:
