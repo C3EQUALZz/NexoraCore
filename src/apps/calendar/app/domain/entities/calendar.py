@@ -1,10 +1,12 @@
-from app.domain.entities.base import BaseEntity
 from dataclasses import dataclass
 
-from app.domain.entities.events.base import BaseEventCalendarEntity
+from app.domain.entities.base import BaseEntity
+from app.domain.entities.events.meeting import MeetingEntity
+from app.domain.entities.events.task import TaskEntity
 
 
 @dataclass(eq=False)
 class CalendarEntity(BaseEntity):
     owner_id: str
-    events: list[BaseEventCalendarEntity]
+    tasks: list[TaskEntity]
+    meetings: list[MeetingEntity]

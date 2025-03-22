@@ -19,7 +19,11 @@ from sqlalchemy.ext.asyncio import (
 
 from app.infrastructure.brokers.base import BaseMessageBroker
 from app.infrastructure.brokers.kafka import KafkaMessageBroker
+from app.infrastructure.uow.events.alchemy import SQLAlchemyEventsUnitOfWork
+from app.infrastructure.uow.events.base import EventsUnitOfWork
 from app.logic.bootstrap import Bootstrap
+from app.logic.commands.tasks import CreateTaskCommand
+from app.logic.handlers.tasks.commands import CreateTaskCommandHandler
 from app.logic.types.handlers import CommandHandlerMapping, EventHandlerMapping
 from app.logic.types.handlers import UT
 from app.settings.config import Settings, get_settings
@@ -36,6 +40,7 @@ class HandlerProvider(Provider):
         return cast(
             CommandHandlerMapping,
             {
+                CreateTaskCommand: CreateTaskCommandHandler
             },
         )
 
@@ -68,6 +73,10 @@ class BrokerProvider(Provider):
 
 class AppProvider(Provider):
     settings = from_context(provides=Settings, scope=Scope.APP)
+
+    @provide(scope=Scope.APP)
+    async def get_events_uow(self, session_maker: async_sessionmaker[AsyncSession]) -> EventsUnitOfWork:
+        return SQLAlchemyEventsUnitOfWork(session_factory=session_maker)
 
     @provide(scope=Scope.APP)
     async def get_bootstrap(
@@ -126,7 +135,6 @@ class AuthProvider(Provider):
     @provide(scope=Scope.APP)
     async def get_security(self, config: AuthXConfig) -> AuthX:
         return AuthX(config=config)
-
 
 
 container = make_async_container(

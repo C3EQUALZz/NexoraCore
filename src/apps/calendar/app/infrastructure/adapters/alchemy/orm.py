@@ -1,133 +1,96 @@
-from sqlalchemy import MetaData
-from sqlalchemy import Table, Column, String, DateTime, ForeignKey, Text
-from sqlalchemy.orm import registry
-from sqlalchemy.orm import relationship
+import uuid
 
-metadata: MetaData = MetaData()
-mapper_registry: registry = registry(metadata=metadata)
-
-users_table = Table(
-    'users',
-    metadata,
-    Column('id', String, primary_key=True)
+from sqlalchemy import (
+    Column, String, DateTime, Text, ForeignKey, Table,
+    UUID, CheckConstraint, func
 )
+from sqlalchemy.orm import declarative_base, relationship
 
-# calendars
-calendars_table = Table(
-    'calendars',
-    metadata,
-    Column('id', String, primary_key=True),
-    Column('owner_id', String, ForeignKey('users.id')),
-)
+Base = declarative_base()
 
-# base events table (joined table inheritance)
-events_table = Table(
-    'events',
-    metadata,
-    Column('id', String, primary_key=True),
-    Column('title', String, nullable=False),
-    Column('description', Text),
-    Column('start_time', DateTime, nullable=False),
-    Column('end_time', DateTime, nullable=False),
-    Column('created_by', String, ForeignKey('users.id')),
-    Column('owner_id', String, ForeignKey('users.id')),
-    Column('type', String(50)),  # для полиморфизма
-)
-
-# meetings
-meetings_table = Table(
-    'meetings',
-    metadata,
-    Column('id', String, ForeignKey('events.id'), primary_key=True),
-    Column('organizer_id', String, ForeignKey('users.id'), nullable=False),
-)
-
-# participants in meetings
-meeting_participants_table = Table(
+# Ассоциационная таблица для участников встреч
+meeting_participants = Table(
     'meeting_participants',
-    metadata,
-    Column('meeting_id', String, ForeignKey('meetings.id'), primary_key=True),
-    Column('participant_id', String, ForeignKey('users.id'), primary_key=True),
+    Base.metadata,
+    Column(
+        'meeting_id',
+        UUID(as_uuid=True),
+        ForeignKey('meetings.oid'), primary_key=True),
+    Column(
+        'user_id',
+        UUID(as_uuid=True),
+        ForeignKey('users.oid'), primary_key=True)
 )
 
-tasks_table = Table(
-    'tasks',
-    metadata,
-    Column('id', String, ForeignKey('events.id'), primary_key=True),
-    Column('assignee_id', String, ForeignKey('users.id')),
-    Column('status', String(50), nullable=False),
-)
+
+class UserModel(Base):
+    __tablename__ = 'users'
+    oid = Column(UUID(as_uuid=True), primary_key=True,
+                 default=uuid.uuid4, unique=True)
+    created_at = Column(DateTime(timezone=True),
+                        default=func.now())
+    updated_at = Column(DateTime(timezone=True),
+                        default=func.now(), onupdate=func.now())
 
 
-def start_mappers() -> None:
-    """
-    Map all domain models to ORM models, for purpose of using domain models directly during work with the database,
-    according to DDD.
-    """
-    from app.domain.entities.user import UserEntity
-    from app.domain.entities.calendar import CalendarEntity
-    from app.domain.entities.events.base import BaseEventCalendarEntity
-    from app.domain.entities.events.meeting import MeetingEntity
-    from app.domain.entities.events.task import TaskEntity
+class CalendarModel(Base):
+    __tablename__ = 'calendars'
+    oid = Column(UUID(as_uuid=True), primary_key=True)
+    owner_id = Column(UUID(as_uuid=True), ForeignKey('users.oid'), unique=True)
 
-    mapper_registry.map_imperatively(
-        UserEntity,
-        users_table
+    meetings = relationship("MeetingModel", back_populates="calendar", cascade="all, delete-orphan")
+    tasks = relationship(
+        "TaskModel",
+        back_populates="calendar",
+        cascade="all, delete-orphan",
+        foreign_keys="TaskModel.calendar_id"  # Явно указываем foreign key
     )
 
-    # CalendarEntity ➜ владелец календаря
-    mapper_registry.map_imperatively(
-        CalendarEntity,
-        calendars_table,
-        properties={
-            'owner': relationship(UserEntity, backref='calendars')
-        }
+
+class BaseEventModel(Base):
+    __abstract__ = True
+    oid = Column(UUID(as_uuid=True), primary_key=True,
+                 default=uuid.uuid4)
+    title = Column(String(255), nullable=False)
+    description = Column(Text)
+    start_time = Column(DateTime(timezone=True), nullable=False)
+    end_time = Column(DateTime(timezone=True), nullable=False)
+    created_at = Column(DateTime(timezone=True),
+                        default=func.now())
+    updated_at = Column(DateTime(timezone=True),
+                        default=func.now(), onupdate=func.now())
+
+    __table_args__ = (
+        CheckConstraint('end_time > start_time',
+                        name='check_end_after_start'),
     )
 
-    mapper_registry.map_imperatively(
-        BaseEventCalendarEntity,
-        events_table,
-        polymorphic_on=events_table.c.type,
-        polymorphic_identity='base_event',
-        properties={
-            'created_by_user': relationship(UserEntity, foreign_keys=[events_table.c.created_by]),
-            'owner': relationship(UserEntity, foreign_keys=[events_table.c.owner_id]),
-        }
+
+class MeetingModel(BaseEventModel):
+    __tablename__ = 'meetings'
+
+    organizer_id = Column(UUID(as_uuid=True), ForeignKey('users.oid'))
+    calendar_id = Column(UUID(as_uuid=True), ForeignKey('calendars.oid'))
+
+    # Relationships
+    calendar = relationship("CalendarModel", back_populates="meetings")
+    participants = relationship("UserModel", secondary=meeting_participants, backref="participating_meetings")
+
+
+class TaskModel(BaseEventModel):
+    __tablename__ = 'tasks'
+
+    created_by_id = Column(UUID(as_uuid=True), ForeignKey('users.oid'))
+    assignee_id = Column(UUID(as_uuid=True), ForeignKey('users.oid'))
+    calendar_id = Column(UUID(as_uuid=True), ForeignKey('calendars.oid'))  # Добавляем явный ForeignKey
+    status = Column(String(20), default='pending')
+
+    # Relationships
+    calendar = relationship(
+        "CalendarModel",
+        back_populates="tasks",
+        foreign_keys=[calendar_id]  # Явно указываем foreign key
     )
 
-    mapper_registry.map_imperatively(
-        MeetingEntity,
-        meetings_table,
-        inherits=BaseEventCalendarEntity,
-        polymorphic_identity='meeting',
-        properties={
-            'organizer': relationship(UserEntity, foreign_keys=[meetings_table.c.organizer_id]),
-            'participants': relationship(
-                UserEntity,
-                secondary=meeting_participants_table,
-                backref='meetings_participated'
-            )
-        }
-    )
-
-    mapper_registry.map_imperatively(
-        TaskEntity,
-        tasks_table,
-        inherits=BaseEventCalendarEntity,
-        polymorphic_identity='task',
-        properties={
-            'assignee': relationship(UserEntity, foreign_keys=[tasks_table.c.assignee_id])
-        }
-    )
-
-    mapper_registry.map_imperatively(
-        CalendarEntity,
-        calendars_table,
-        properties={
-            'events': relationship(
-                BaseEventCalendarEntity,
-                primaryjoin=calendars_table.c.owner_id == events_table.c.owner_id,
-                foreign_keys=[events_table.c.owner_id]
-            )
-        }
-    )
+    created_by = relationship("UserModel", foreign_keys=[created_by_id])
+    assignee = relationship("UserModel", foreign_keys=[assignee_id])

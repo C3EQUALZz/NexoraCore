@@ -56,16 +56,6 @@ class SQLAlchemySettings(CommonSettings):
     expire_on_commit: bool = Field(alias="DATABASE_EXPIRE_ON_COMMIT")
 
 
-class RedisSettings(CommonSettings):
-    host: str = Field(alias="REDIS_HOST")
-    port: int = Field(alias="REDIS_PORT_NETWORK")
-    password: str = Field(alias="REDIS_PASSWORD")
-
-    @property
-    def url(self) -> RedisDsn:
-        return RedisDsn(f"redis://:{self.password}@{self.host}:{self.port}")
-
-
 class BrokerSettings(CommonSettings):
     host: str = Field(alias="BROKER_HOST")
     port: int = Field(alias="BROKER_PORT_NETWORK")
@@ -91,7 +81,6 @@ class Settings(CommonSettings):
 
     database: DatabaseSettings = DatabaseSettings()
     alchemy_settings: SQLAlchemySettings = SQLAlchemySettings()
-    cache: RedisSettings = RedisSettings()
     broker: BrokerSettings = BrokerSettings()
     auth: AuthSettings = AuthSettings()
 

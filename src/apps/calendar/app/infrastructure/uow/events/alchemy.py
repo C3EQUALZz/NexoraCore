@@ -4,6 +4,8 @@ from app.infrastructure.repositories.meetings.alchemy import SQLAlchemyMeetingsR
 from app.infrastructure.repositories.tasks.alchemy import SQLAlchemyTasksRepository
 from app.infrastructure.repositories.meetings.base import MeetingsRepository
 from app.infrastructure.repositories.tasks.base import TasksRepository
+from app.infrastructure.repositories.users.alchemy import SQLAlchemyUsersRepository
+from app.infrastructure.repositories.users.base import UsersRepository
 from app.infrastructure.uow.base import SQLAlchemyAbstractUnitOfWork
 from app.infrastructure.uow.events.base import EventsUnitOfWork
 
@@ -13,4 +15,5 @@ class SQLAlchemyEventsUnitOfWork(SQLAlchemyAbstractUnitOfWork, EventsUnitOfWork)
         uow = await super().__aenter__()
         self.tasks: TasksRepository = SQLAlchemyTasksRepository(session=self._session)
         self.meetings: MeetingsRepository = SQLAlchemyMeetingsRepository(session=self._session)
+        self.users: UsersRepository = SQLAlchemyUsersRepository(session=self._session)
         return uow

@@ -1,16 +1,12 @@
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 
 from app.domain.entities.events.base import BaseEventCalendarEntity
-from app.domain.entities.user import UserEntity
 
 
 @dataclass(eq=False)
 class MeetingEntity(BaseEventCalendarEntity):
     organizer_id: str
-    participants: list[UserEntity] = field(default_factory=list)
-
-    def is_participant(self, user_id: str) -> bool:
-        return user_id in self.participants or user_id == self.organizer_id
-
-    def is_organizer(self, user_id: str) -> bool:
-        return user_id == self.organizer_id
+    participants: list[str] = field(default_factory=list)
+    start_time: datetime = field(default_factory=lambda: datetime.now())
+    end_time: datetime = field(default_factory=lambda: datetime.now() + timedelta(hours=1))

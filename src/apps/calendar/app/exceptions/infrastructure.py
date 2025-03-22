@@ -56,3 +56,14 @@ class AttributeException(InfrastructureException):
     def status(self) -> int:
         return HTTPStatus.BAD_REQUEST.value
 
+@dataclass(eq=False)
+class UserNotFoundException(InfrastructureException):
+    value: str
+
+    @property
+    def message(self) -> str:
+        return f"User {self.value} not found"
+
+    @property
+    def status(self) -> int:
+        return HTTPStatus.NOT_FOUND.value

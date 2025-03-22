@@ -2,6 +2,7 @@ from abc import ABC
 
 from app.infrastructure.repositories.meetings.base import MeetingsRepository
 from app.infrastructure.repositories.tasks.base import TasksRepository
+from app.infrastructure.repositories.users.base import UsersRepository
 from app.infrastructure.uow.base import AbstractUnitOfWork
 
 
@@ -14,3 +15,4 @@ class EventsUnitOfWork(AbstractUnitOfWork, ABC):
 
     tasks: TasksRepository
     meetings: MeetingsRepository
+    users: UsersRepository

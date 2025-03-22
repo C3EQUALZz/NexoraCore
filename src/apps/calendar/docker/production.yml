@@ -6,15 +6,13 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-    command: [ "sh", "-c", "alembic upgrade head && gunicorn --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 4 --timeout 120 --log-level info app.main:create_app" ]
+    command: [ "sh", "-c", "gunicorn --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 4 --timeout 120 --log-level info app.main:create_app" ]
     ports:
       - "${API_PORT}:8000"
     env_file:
       - ../.env
     depends_on:
       postgres-app-calendar:
-        condition: service_healthy
-      redis-app-calendar:
         condition: service_healthy
     networks:
       - calendar-service
@@ -42,28 +40,8 @@ services:
     env_file:
       - ../.env
 
-  redis-app-calendar:
-    container_name: redis-app-calendar
-    image: redis:6.2-alpine
-    restart: unless-stopped
-    ports:
-      - '${REDIS_PORT}:6379'
-    healthcheck:
-      test: [ "CMD-SHELL", "redis-cli", "ping" ]
-      interval: 1s
-      timeout: 3s
-      retries: 5
-    command: [ "redis-server", "--appendonly yes", "--requirepass", "${REDIS_PASSWORD}" ]
-    volumes:
-      - redis_app_calendar:/data
-    env_file:
-      - ../.env
-    networks:
-      - calendar-service
-
 volumes:
   postgres_data_calendar:
-  redis_app_calendar:
 
 networks:
   calendar-service:
