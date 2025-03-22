@@ -112,7 +112,7 @@ def start_mappers() -> None:
             'created_by': relationship(
                 UserEntity,
                 foreign_keys=[tasks_table.c.created_by_id],
-                back_populates='tasks_created'
+                back_populates='tasks_created',
             ),
             'assignee': relationship(
                 UserEntity,

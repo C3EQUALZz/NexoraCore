@@ -1,13 +1,12 @@
+import logging
 from typing import override, Sequence, Any
 
-from sqlalchemy import Result, select, delete, update, Row, RowMapping, insert
+from sqlalchemy import Result, select, delete, Row, RowMapping, insert
 from sqlalchemy.orm import joinedload
 
 from app.domain.entities.events.task import TaskEntity
 from app.infrastructure.repositories.base import SQLAlchemyAbstractRepository
 from app.infrastructure.repositories.tasks.base import TasksRepository
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -52,11 +51,21 @@ class SQLAlchemyTasksRepository(SQLAlchemyAbstractRepository, TasksRepository):
         result: Result = await self._session.execute(
             insert(TaskEntity)
             .values(**data)
+            .returning(TaskEntity.oid)
         )
 
-        # result.scalar_one()
+        task_id: str = result.scalar_one()
 
-        return model
+        result: Result = await self._session.execute((
+            select(TaskEntity)
+            .where(TaskEntity.oid == task_id) # type: ignore
+            .options(
+                joinedload(TaskEntity.assignee), # type: ignore
+                joinedload(TaskEntity.created_by) # type: ignore
+            )
+        ))
+
+        return result.scalar_one()
 
     @override
     async def get(self, oid: str) -> TaskEntity | None:
