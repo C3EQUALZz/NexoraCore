@@ -28,10 +28,10 @@ router = APIRouter(
 async def get_task_in_calendar(
         task_id: UUID,
         uow: FromDishka[EventsUnitOfWork]
-):
+) -> TaskSchemaResponse:
     view: TasksView = TasksView(uow=uow)
     task: TaskEntity = await view.get_task_by_id(str(task_id))
-    return task
+    return TaskSchemaResponse.from_entity(task)
 
 
 @router.get(

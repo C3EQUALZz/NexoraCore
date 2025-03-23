@@ -5,7 +5,7 @@ from app.infrastructure.uow.events.base import EventsUnitOfWork
 
 class TasksView:
     """
-    Views related to users, which purpose is to return information upon read requests,
+    Views related to tasks, which purpose is to return information upon read requests,
     due to the fact that write requests (represented by commands) are different from read requests.
     """
 

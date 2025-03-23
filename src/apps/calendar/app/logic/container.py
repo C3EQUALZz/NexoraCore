@@ -18,12 +18,20 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from app.infrastructure.brokers.base import BaseMessageBroker
+from app.infrastructure.brokers.consumers.manager import ConsumerManager
+from app.infrastructure.brokers.consumers.users import UserDeletedConsumer, UserCreatedConsumer, UserUpdatedConsumer
 from app.infrastructure.brokers.kafka import KafkaMessageBroker
 from app.infrastructure.uow.events.alchemy import SQLAlchemyEventsUnitOfWork
 from app.infrastructure.uow.events.base import EventsUnitOfWork
 from app.logic.bootstrap import Bootstrap
-from app.logic.commands.tasks import CreateTaskCommand
-from app.logic.handlers.tasks.commands import CreateTaskCommandHandler
+from app.logic.commands.meetings import CreateMeetingCommand, DeleteMeetingCommand, UpdateMeetingCommand
+from app.logic.commands.tasks import CreateTaskCommand, UpdateTaskCommand, DeleteTaskCommand
+from app.logic.events.user import UserDeletedEvent, UserCreatedEvent, UserUpdatedEvent
+from app.logic.handlers.meetings.commands import CreateMeetingCommandHandler, DeleteMeetingCommandHandler, \
+    UpdateMeetingCommandHandler
+from app.logic.handlers.tasks.commands import CreateTaskCommandHandler, UpdateTaskCommandHandler, \
+    DeleteTaskCommandHandler
+from app.logic.handlers.users.events import UserDeletedEventHandler, UserCreatedEventHandler, UserUpdatedEventHandler
 from app.logic.types.handlers import CommandHandlerMapping, EventHandlerMapping
 from app.logic.types.handlers import UT
 from app.settings.config import Settings, get_settings
@@ -40,7 +48,12 @@ class HandlerProvider(Provider):
         return cast(
             CommandHandlerMapping,
             {
-                CreateTaskCommand: CreateTaskCommandHandler
+                CreateTaskCommand: CreateTaskCommandHandler,
+                UpdateTaskCommand: UpdateTaskCommandHandler,
+                DeleteTaskCommand: DeleteTaskCommandHandler,
+                CreateMeetingCommand: CreateMeetingCommandHandler,
+                DeleteMeetingCommand: DeleteMeetingCommandHandler,
+                UpdateMeetingCommand: UpdateMeetingCommandHandler
             },
         )
 
@@ -52,6 +65,9 @@ class HandlerProvider(Provider):
         return cast(
             EventHandlerMapping,
             {
+                UserDeletedEvent: [UserDeletedEventHandler],
+                UserCreatedEvent: [UserCreatedEventHandler],
+                UserUpdatedEvent: [UserUpdatedEventHandler],
             }
         )
 
@@ -91,6 +107,20 @@ class AppProvider(Provider):
             events_handlers_for_injection=events,
             commands_handlers_for_injection=commands,
             dependencies={"broker": broker}
+        )
+
+    @provide(scope=Scope.APP)
+    async def get_consumer_manager(
+            self,
+            broker: BaseMessageBroker,
+            uow: EventsUnitOfWork,
+    ) -> ConsumerManager:
+        return ConsumerManager(
+            consumers=[
+                UserDeletedConsumer(broker=broker, uow=uow),
+                UserCreatedConsumer(broker=broker, uow=uow),
+                UserUpdatedConsumer(broker=broker, uow=uow),
+            ]
         )
 
 

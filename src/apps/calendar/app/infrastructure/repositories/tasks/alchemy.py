@@ -1,14 +1,11 @@
-import logging
 from typing import override, Sequence, Any
 
-from sqlalchemy import Result, select, delete, Row, RowMapping, insert
+from sqlalchemy import Result, select, delete, Row, RowMapping, insert, update
 from sqlalchemy.orm import joinedload
 
 from app.domain.entities.events.task import TaskEntity
 from app.infrastructure.repositories.base import SQLAlchemyAbstractRepository
 from app.infrastructure.repositories.tasks.base import TasksRepository
-
-logger = logging.getLogger(__name__)
 
 
 class SQLAlchemyTasksRepository(SQLAlchemyAbstractRepository, TasksRepository):
@@ -17,7 +14,16 @@ class SQLAlchemyTasksRepository(SQLAlchemyAbstractRepository, TasksRepository):
             self,
             assignee_id: str
     ) -> list[TaskEntity]:
-        result: Result = await self._session.execute(select(TaskEntity).filter_by(assignee_id=assignee_id))
+
+        result: Result = await self._session.execute(
+            select(TaskEntity)
+            .filter_by(assignee_id=assignee_id)
+            .options(
+                joinedload(TaskEntity.created_by),  # type: ignore
+                joinedload(TaskEntity.assignee)  # type: ignore
+            )
+        )
+
         entities: Sequence[Row | RowMapping | Any] = result.scalars().all()
 
         assert isinstance(entities, list)
@@ -28,8 +34,24 @@ class SQLAlchemyTasksRepository(SQLAlchemyAbstractRepository, TasksRepository):
         return entities
 
     @override
-    async def get_by_assignee_id_and_status(self, assignee_id: str, status: str) -> TaskEntity:
-        raise NotImplementedError
+    async def get_by_assignee_id_and_status(self, assignee_id: str, status: str) -> list[TaskEntity]:
+        result: Result = await self._session.execute(
+            select(TaskEntity)
+            .filter_by(assignee_id=assignee_id, status=status)
+            .options(
+                joinedload(TaskEntity.created_by),  # type: ignore
+                joinedload(TaskEntity.assignee)  # type: ignore
+            )
+        )
+
+        entities: Sequence[Row | RowMapping | Any] = result.scalars().all()
+
+        assert isinstance(entities, list)
+
+        for entity in entities:
+            assert isinstance(entity, TaskEntity)
+
+        return entities
 
     @override
     async def list_by_status(
@@ -38,53 +60,110 @@ class SQLAlchemyTasksRepository(SQLAlchemyAbstractRepository, TasksRepository):
             start: int | None = None,
             limit: int | None = None
     ) -> list[TaskEntity]:
-        raise NotImplementedError
+        if start is not None and limit is not None:
+            result: Result = await self._session.execute(
+                select(TaskEntity)
+                .filter_by(status=status)
+                .options(
+                    joinedload(TaskEntity.created_by),  # type: ignore
+                    joinedload(TaskEntity.assignee)  # type: ignore
+                )
+                .offset(start)
+                .limit(limit)
+            )
+        else:
+            result: Result = await self._session.execute(
+                select(TaskEntity)
+                .filter_by(status=status)
+                .options(
+                    joinedload(TaskEntity.created_by),  # type: ignore
+                    joinedload(TaskEntity.assignee)  # type: ignore
+                )
+            )
+
+        entities: Sequence[Row | RowMapping | Any] = result.scalars().all()
+
+        assert isinstance(entities, list)
+
+        for entity in entities:
+            assert isinstance(entity, TaskEntity)
+
+        return entities
 
     @override
     async def add(self, model: TaskEntity) -> TaskEntity:
-
-        data = await model.to_dict()
-
-        data['assignee_id'] = data.pop('assignee').get('oid')
-        data['created_by_id'] = data.pop('created_by').get('oid')
-
         result: Result = await self._session.execute(
             insert(TaskEntity)
-            .values(**data)
+            .values(**await model.to_dict())
             .returning(TaskEntity.oid)
         )
 
         task_id: str = result.scalar_one()
 
-        result: Result = await self._session.execute((
-            select(TaskEntity)
-            .where(TaskEntity.oid == task_id) # type: ignore
-            .options(
-                joinedload(TaskEntity.assignee), # type: ignore
-                joinedload(TaskEntity.created_by) # type: ignore
-            )
-        ))
-
-        return result.scalar_one()
+        return await self.get(task_id)
 
     @override
     async def get(self, oid: str) -> TaskEntity | None:
         result: Result = await self._session.execute(
             select(TaskEntity)
             .filter_by(oid=oid)
-            .options(joinedload(TaskEntity.created_by), joinedload(TaskEntity.assignee)) # type: ignore
+            .options(
+                joinedload(TaskEntity.created_by),  # type: ignore
+                joinedload(TaskEntity.assignee)  # type: ignore
+            )
         )
 
         return result.scalar_one_or_none()
 
     @override
     async def update(self, oid: str, model: TaskEntity) -> TaskEntity:
-        ...
+        result: Result = await self._session.execute(
+            update(TaskEntity)
+            .filter_by(oid=oid)
+            .values(**await model.to_dict())
+            .returning(TaskEntity.oid)
+        )
+
+        task_id: str = result.scalar_one()
+
+        return await self.get(task_id)
+
 
     @override
     async def delete(self, oid: str) -> None:
         await self._session.execute(delete(TaskEntity).filter_by(oid=oid))
 
     @override
-    async def list(self, start: int | None = None, limit: int | None = None) -> list[TaskEntity]:
-        ...
+    async def list(
+            self,
+            start: int | None = None,
+            limit: int | None = None
+    ) -> list[TaskEntity]:
+        if start is None and limit is None:
+            result: Result = await self._session.execute(
+                select(TaskEntity)
+                .options(
+                    joinedload(TaskEntity.created_by),  # type: ignore
+                    joinedload(TaskEntity.assignee)  # type: ignore
+                )
+            )
+
+        else:
+            result: Result = await self._session.execute(
+                select(TaskEntity)
+                .options(
+                    joinedload(TaskEntity.created_by),  # type: ignore
+                    joinedload(TaskEntity.assignee)  # type: ignore
+                )
+                .offset(start)
+                .limit(limit)
+            )
+
+        entities: Sequence[Row | RowMapping | Any] = result.scalars().all()
+
+        assert isinstance(entities, list)
+
+        for entity in entities:
+            assert isinstance(entity, TaskEntity)
+
+        return entities

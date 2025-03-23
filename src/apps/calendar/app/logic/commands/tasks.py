@@ -23,8 +23,9 @@ class DeleteTaskCommand(AbstractCommand):
 class UpdateTaskCommand(AbstractCommand):
     oid: str
     title: str
-    description: str | None
+    description: str
     assignee_id: str
+    created_by_id: str
     start_time: datetime
     end_time: datetime
     status: str

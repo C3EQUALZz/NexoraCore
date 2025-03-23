@@ -41,4 +41,6 @@ class MeetingsService:
 
             await uow.commit()
 
-
+    async def get_all(self, start: int | None = None, limit: int | None = None) -> list[MeetingEntity]:
+        async with self._uow as uow:
+            return await uow.meetings.list(start=start, limit=limit)

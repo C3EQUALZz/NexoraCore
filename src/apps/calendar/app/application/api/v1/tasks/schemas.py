@@ -42,6 +42,11 @@ class UpdateTaskSchemaRequest(CreateTaskSchemaRequest):
 
 
 class TaskSchemaResponse(BaseModel):
+    oid: StringUUID = Field(
+        ...,
+        description="ID задания"
+    )
+
     title: str = Field(
         ...,
         description="Название задачи. Краткий заголовок, отражающий суть задачи."
@@ -72,10 +77,10 @@ class TaskSchemaResponse(BaseModel):
         description="Статус выполнения задачи"
     )
 
-
     @classmethod
     def from_entity(cls, entity: TaskEntity) -> Self:
         return cls(
+            oid=entity.oid,
             title=entity.title,
             description=entity.description,
             assignee=UserSchemaResponse.from_entity(entity.assignee),

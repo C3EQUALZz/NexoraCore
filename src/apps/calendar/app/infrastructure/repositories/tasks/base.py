@@ -14,7 +14,7 @@ class TasksRepository(AbstractRepository[TaskEntity], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def get_by_assignee_id_and_status(self, assignee_id: str, status: str) -> TaskEntity:
+    async def get_by_assignee_id_and_status(self, assignee_id: str, status: str) -> list[TaskEntity]:
         raise NotImplementedError
 
     @abstractmethod
