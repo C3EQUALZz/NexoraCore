@@ -33,3 +33,9 @@ class DeleteTaskCommand(AbstractCommand):
 class CreateCommentForTaskCommand(AbstractCommand):
     task_id: str
     comment: str
+
+
+@dataclass(frozen=True)
+class UpdateTaskStatusCommand(AbstractCommand):
+    task_id: str
+    status: str
