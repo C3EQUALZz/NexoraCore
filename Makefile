@@ -29,9 +29,15 @@ team:
 down-team:
 	cd src/apps/team && $(DC) --env-file .env -f docker/production.yml down
 
+calendar:
+	cd src/apps/calendar && $(DC) --env-file .env -f docker/production.yml up --build -d
+
+down-calendar:
+	cd src/apps/calendar && $(DC) --env-file .env -f docker/production.yml down
+
 # 👉 Поднять всё (по порядку)
-all: network kafka user team
+all: network kafka user team calendar
 
 # 👉 Остановить все сервисы
-down-all: down-team down-user down-kafka
+down-all: down-team down-user down-kafka down-calendar
 	@docker network rm $(NETWORK_NAME) || true
