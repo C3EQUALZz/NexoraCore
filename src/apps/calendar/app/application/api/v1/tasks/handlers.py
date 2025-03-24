@@ -3,8 +3,10 @@ from dishka.integrations.fastapi import DishkaRoute
 from fastapi import APIRouter, Query
 from uuid import UUID
 
+from fastapi.params import Depends
 from starlette import status
 
+from app.application.api.v1.auth.dependencies import RoleChecker
 from app.application.api.v1.tasks.schemas import CreateTaskSchemaRequest, UpdateTaskSchemaRequest, TaskSchemaResponse
 from app.domain.entities.events.task import TaskEntity
 from app.infrastructure.uow.events.base import EventsUnitOfWork
@@ -24,6 +26,7 @@ router = APIRouter(
     "/{task_id}/",
     description="Get task in calendar by ID",
     status_code=status.HTTP_200_OK,
+    dependencies=[Depends(RoleChecker(allowed_roles=["admin", "user", "manager"]))]
 )
 async def get_task_in_calendar(
         task_id: UUID,
@@ -38,6 +41,7 @@ async def get_task_in_calendar(
     "/",
     description="Get all tasks in calendar",
     status_code=status.HTTP_200_OK,
+    dependencies=[Depends(RoleChecker(allowed_roles=["admin", "user", "manager"]))]
 )
 async def get_all_tasks_in_calendar(
         uow: FromDishka[EventsUnitOfWork],
@@ -52,7 +56,8 @@ async def get_all_tasks_in_calendar(
 @router.post(
     "/",
     description="Create new task in calendar",
-    status_code=status.HTTP_201_CREATED
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(RoleChecker(allowed_roles=["admin", "user", "manager"]))]
 )
 async def create_task_in_calendar(
         schema: CreateTaskSchemaRequest,
@@ -67,6 +72,7 @@ async def create_task_in_calendar(
     "/{task_id}/",
     description="Update task in calendar",
     status_code=status.HTTP_200_OK,
+    dependencies=[Depends(RoleChecker(allowed_roles=["admin", "user", "manager"]))]
 )
 async def update_task_in_calendar(
         task_id: UUID,
@@ -81,7 +87,8 @@ async def update_task_in_calendar(
 @router.delete(
     "/{task_id}/",
     description="Delete task in calendar",
-    status_code=status.HTTP_204_NO_CONTENT
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(RoleChecker(allowed_roles=["admin", "user", "manager"]))]
 )
 async def delete_task_in_calendar(
         task_id: UUID,

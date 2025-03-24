@@ -11,8 +11,10 @@ class UserDeletedEvent(AbstractEvent):
 @dataclass(frozen=True)
 class UserCreatedEvent(AbstractEvent):
     user_oid: str
+    role: str
 
 
 @dataclass(frozen=True)
 class UserUpdatedEvent(AbstractEvent):
     user_oid: str
+    role: str

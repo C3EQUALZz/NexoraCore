@@ -14,6 +14,7 @@ users_table = Table(
     'users',
     mapper_registry.metadata,
     Column('oid', StringUUID(), primary_key=True, default=uuid.uuid4),
+    Column('role', String(30), nullable=False),
     Column('created_at', DateTime(timezone=True), default=datetime.now),
     Column('updated_at', DateTime(timezone=True), default=datetime.now, onupdate=datetime.now)
 )

@@ -37,7 +37,11 @@ class UserCreatedConsumer(BaseConsumer):
                 logger.error("Bad message from Kafka: there is no user_oid")
                 return
 
-            await uow.add_event(UserCreatedEvent(user_oid=user_oid))
+            if not (role := message.get("role")):
+                logger.error("Bad message from Kafka: there is no role for user")
+                return
+
+            await uow.add_event(UserCreatedEvent(user_oid=user_oid, role=role))
             logger.info("create for user %s was created", user_oid)
 
 
@@ -54,5 +58,9 @@ class UserUpdatedConsumer(BaseConsumer):
                 logger.error("Bad message from Kafka: there is no user_oid")
                 return
 
-            await uow.add_event(UserUpdatedEvent(user_oid=user_oid))
+            if not (role := message.get("role")):
+                logger.error("Bad message from Kafka: there is no role for user")
+                return
+
+            await uow.add_event(UserUpdatedEvent(user_oid=user_oid, role=role))
             logger.info("UpdatedUserEvent for user %s was created", user_oid)
