@@ -1,7 +1,7 @@
 from abc import ABC
 from pathlib import Path
 
-from pydantic import Field, RedisDsn
+from pydantic import Field
 from pydantic_settings import (
     BaseSettings,
     SettingsConfigDict,
@@ -38,24 +38,6 @@ class DatabaseSettings(CommonSettings):
         return f"mongodb://{self.user}:{self.password}@{self.host}:{self.port}/"
 
 
-class RedisSettings(CommonSettings):
-    host: str = Field(alias="REDIS_HOST")
-    port: int = Field(alias="REDIS_PORT_NETWORK")
-    password: str = Field(alias="REDIS_PASSWORD")
-
-    @property
-    def url(self) -> RedisDsn:
-        return RedisDsn(f"redis://:{self.password}@{self.host}:{self.port}")
-
-
-class AdminSettings(CommonSettings):
-    email: str = Field(alias="ADMIN_EMAIL")
-    surname: str = Field(alias="ADMIN_SURNAME")
-    name: str = Field(alias="ADMIN_NAME")
-    patronymic: str = Field(alias="ADMIN_PATRONYMIC")
-    password: str = Field(alias="ADMIN_PASSWORD")
-    telegram_uri: str = Field(alias="ADMIN_TELEGRAM_URI")
-
 
 class BrokerSettings(CommonSettings):
     host: str = Field(alias="BROKER_HOST")
@@ -72,6 +54,4 @@ class Settings(CommonSettings):
     """
 
     database: DatabaseSettings = DatabaseSettings()
-    cache: RedisSettings = RedisSettings()
-    admin: AdminSettings = AdminSettings()
     broker: BrokerSettings = BrokerSettings()
