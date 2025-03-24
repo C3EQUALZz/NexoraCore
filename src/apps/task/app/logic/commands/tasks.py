@@ -39,3 +39,9 @@ class CreateCommentForTaskCommand(AbstractCommand):
 class UpdateTaskStatusCommand(AbstractCommand):
     task_id: str
     status: str
+
+
+@dataclass(frozen=True)
+class CreateNewCommentForTaskCommand(AbstractCommand):
+    task_id: str
+    comment: str

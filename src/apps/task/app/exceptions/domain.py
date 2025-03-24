@@ -77,3 +77,26 @@ class ObsceneTextException(DomainException):
     @property
     def message(self) -> str:
         return f"{self.text[:30]} is an obscene text"
+
+
+@dataclass(eq=False)
+class EmptyEmailException(DomainException):
+    @property
+    def message(self) -> str:
+        return "Email is empty"
+
+
+@dataclass(eq=False)
+class InvalidEmailException(DomainException):
+    email: str
+
+    @property
+    def message(self) -> str:
+        return f"The provided email is invalid: {self.email}"
+
+
+@dataclass(eq=False)
+class RoleException(DomainException):
+    @property
+    def message(self) -> str:
+        return "Role does not exist. Please choose admin or staffer, manager"

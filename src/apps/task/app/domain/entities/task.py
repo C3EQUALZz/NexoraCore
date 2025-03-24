@@ -1,9 +1,12 @@
-from app.domain.entities.base import BaseEntity
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Mapping, Any, Self
-from app.domain.values.task import Title, Description, TaskStatus
+
+from app.domain.entities.base import BaseEntity
+from app.domain.entities.user import UserEntity
 from app.domain.values.shared import Comment
+from app.domain.values.task import Title, Description, TaskStatus
+from app.domain.values.user import Role, Email
 
 
 @dataclass(eq=False)
@@ -13,20 +16,25 @@ class TaskEntity(BaseEntity):
     """
     title: Title
     description: Description
-    assigned_to: str
-    created_by: str
+    assigned_to: UserEntity
+    created_by: UserEntity
     due_datetime: datetime
     status: TaskStatus = field(default_factory=lambda: TaskStatus("open"))
     comments: list[Comment] = field(default_factory=list)
 
     @classmethod
     def from_document(cls, document: Mapping[str, Any]) -> Self:
-        title: Title = Title(document["title"])
-        description: Description = Description(document["description"])
-        assigned_to: str = document["assigned_to"]
-        created_by: str = document["created_by"]
-        due_datetime: datetime = document["due_datetime"]
-        status: TaskStatus = TaskStatus(document["status"])
+        assigned_to: UserEntity = UserEntity(
+            oid=document["assigned_to"].get("oid"),
+            role=Role(document["assigned_to"].get("role")),
+            email=Email(document["assigned_to"].get("email")),
+        )
+
+        created_by: UserEntity = UserEntity(
+            oid=document["created_by"].get("oid"),
+            role=Role(document["created_by"].get("role")),
+            email=Email(document["created_by"].get("email")),
+        )
 
         if document.get("comments", None):
             comments: list[Comment] = [Comment(x) for x in document["comments"]]
@@ -34,11 +42,11 @@ class TaskEntity(BaseEntity):
             comments: list[Comment] = []
 
         return cls(
-            title=title,
-            description=description,
+            title=Title(document["title"]),
+            description=Description(document["description"]),
             assigned_to=assigned_to,
             created_by=created_by,
-            due_datetime=due_datetime,
-            status=status,
+            due_datetime=document["due_datetime"],
+            status=TaskStatus(document["status"]),
             comments=comments,
         )
