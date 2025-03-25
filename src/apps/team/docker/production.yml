@@ -1,0 +1,76 @@
+services:
+  team-service-app-backend:
+    restart: unless-stopped
+    container_name: team-service-app-backend
+    image: team-service-app-backend
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    command: "gunicorn --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 4 --timeout 120 --log-level info app.main:create_app"
+    ports:
+      - "${API_PORT}:8000"
+    env_file:
+      - ../.env
+    depends_on:
+      mongodb-app-team:
+        condition: service_healthy
+      redis-app-team:
+        condition: service_healthy
+    networks:
+      - team-service
+      - microservices-network
+    volumes:
+      - team_service_logs:/app/resources/logs
+
+  mongodb-app-team:
+    container_name: mongodb-app-team
+    image: mongo:7.0.0-jammy
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: ${DATABASE_NAME}
+      MONGO_INITDB_ROOT_USERNAME: ${DATABASE_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${DATABASE_PASSWORD}
+    ports:
+      - "${DATABASE_PORT}:27017"
+    healthcheck:
+      test: [ "CMD","mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    volumes:
+      - mongodb_data_users:/data/db
+    env_file:
+      - ../.env
+    networks:
+      - team-service
+
+  redis-app-team:
+    container_name: redis-app-team
+    image: redis:6.2-alpine
+    restart: unless-stopped
+    ports:
+      - '${REDIS_PORT}:6379'
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli", "ping" ]
+      interval: 1s
+      timeout: 3s
+      retries: 5
+    command: [ "redis-server", "--appendonly yes", "--requirepass", "${REDIS_PASSWORD}" ]
+    volumes:
+      - redis_data_users:/data
+    env_file:
+      - ../.env
+    networks:
+      - team-service
+
+volumes:
+  mongodb_data_users:
+  redis_data_users:
+  team_service_logs:
+
+networks:
+  team-service:
+    driver: bridge
+  microservices-network:
+    external: true

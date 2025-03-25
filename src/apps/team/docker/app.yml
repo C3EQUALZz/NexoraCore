@@ -1,0 +1,18 @@
+services:
+  team-service-app-backend:
+    container_name: team-service
+    image: team-service
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    command: "uvicorn --factory app.main:create_app --reload --host 0.0.0.0 --port 8000"
+    ports:
+      - "${API_PORT}:8000"
+    env_file:
+      - ../.env
+    networks:
+      - team-service
+
+networks:
+  team-service:
+    driver: bridge

@@ -1,0 +1,100 @@
+services:
+  user-service-app-backend:
+    restart: unless-stopped
+    container_name: user-service-app-backend
+    image: user-service-app-backend
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    command: ["sh", "-c", "alembic upgrade head && gunicorn --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 4 --timeout 120 --log-level info app.main:create_app"]
+    ports:
+      - "${API_PORT}:8000"
+    env_file:
+      - ../.env
+    depends_on:
+      postgres-app-users:
+        condition: service_healthy
+      redis-app-users:
+        condition: service_healthy
+    networks:
+      - user-service
+      - microservices-network
+
+  postgres-app-users:
+    container_name: postgres-app-users
+    image: postgres:16.3-alpine
+    restart: unless-stopped
+    ports:
+      - "${DATABASE_PORT}:5432"
+    volumes:
+      - postgres_data_users:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${DATABASE_USER} -d $${DATABASE_NAME}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - user-service
+    env_file:
+      - ../.env
+
+  pgadmin-app-users:
+    image: dpage/pgadmin4:8.14.0
+    container_name: pgadmin-app-users
+    restart: "unless-stopped"
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data_users:/var/lib/pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:80/misc/ping || exit -1
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      retries: 5
+    depends_on:
+      postgres-app-users:
+        condition: service_healthy
+    networks:
+      - user-service
+    env_file:
+      - ../.env
+
+  redis-app-users:
+    container_name: redis-app-users
+    image: redis:6.2-alpine
+    restart: unless-stopped
+    ports:
+      - '${REDIS_PORT}:6379'
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli", "ping" ]
+      interval: 1s
+      timeout: 3s
+      retries: 5
+    command: [ "redis-server", "--appendonly yes", "--requirepass", "${REDIS_PASSWORD}" ]
+    volumes:
+      - redis_data_users:/data
+    env_file:
+      - ../.env
+    networks:
+      - user-service
+
+volumes:
+  postgres_data_users:
+  pgadmin_data_users:
+  redis_data_users:
+
+networks:
+  user-service:
+    driver: bridge
+  microservices-network:
+    external: true

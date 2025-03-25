@@ -1,0 +1,26 @@
+services:
+  redis:
+    container_name: redis-app-users
+    image: redis:6.2-alpine
+    restart: unless-stopped
+    ports:
+      - '${REDIS_PORT}:6379'
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli", "ping" ]
+      interval: 1s
+      timeout: 3s
+      retries: 5
+    command: [ "redis-server", "--appendonly yes", "--requirepass", "${REDIS_PASSWORD}" ]
+    volumes:
+      - redis_data_users:/data
+    env_file:
+      - ../.env
+    networks:
+      - user-service
+
+networks:
+  user-service:
+    driver: bridge
+
+volumes:
+  redis_data_users:
