@@ -1,6 +1,7 @@
 from abc import ABC
 from typing import override
 
+from app.infrastructure.services.calendar.base import CalendarService
 from app.infrastructure.services.user.base import UserService
 from app.infrastructure.brokers.base import BaseMessageBroker
 from app.infrastructure.uow.task.base import TasksUnitOfWork
@@ -32,6 +33,7 @@ class TasksCommandHandler(AbstractCommandHandler[CT], ABC):
     """
 
     @override
-    def __init__(self, uow: TasksUnitOfWork, client_service: UserService) -> None:
+    def __init__(self, uow: TasksUnitOfWork, client_service: UserService, calendar_service: CalendarService) -> None:
         self._uow: TasksUnitOfWork = uow
         self._client_service: UserService = client_service
+        self._calendar_service: CalendarService = calendar_service

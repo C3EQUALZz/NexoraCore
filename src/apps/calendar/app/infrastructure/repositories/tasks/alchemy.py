@@ -1,6 +1,7 @@
+from datetime import datetime
 from typing import override, Sequence, Any
 
-from sqlalchemy import Result, select, delete, Row, RowMapping, insert, update
+from sqlalchemy import Result, select, delete, Row, RowMapping, insert, update, and_, exists
 from sqlalchemy.orm import joinedload
 
 from app.domain.entities.events.task import TaskEntity
@@ -128,7 +129,6 @@ class SQLAlchemyTasksRepository(SQLAlchemyAbstractRepository, TasksRepository):
 
         return await self.get(task_id)
 
-
     @override
     async def delete(self, oid: str) -> None:
         await self._session.execute(delete(TaskEntity).filter_by(oid=oid))
@@ -167,3 +167,27 @@ class SQLAlchemyTasksRepository(SQLAlchemyAbstractRepository, TasksRepository):
             assert isinstance(entity, TaskEntity)
 
         return entities
+
+    @override
+    async def is_user_available_for_this_time(
+            self,
+            assignee_id: str,
+            start_time: datetime,
+            end_time: datetime
+    ) -> bool:
+        # Условия фильтрации
+        result: Result = await self._session.execute(exists().where(
+            and_(
+                TaskEntity.assignee_id == assignee_id, # type: ignore
+                TaskEntity.status.in_(["pending", "in_progress"]), # type: ignore
+                and_(
+                    TaskEntity.start_time < end_time,
+                    TaskEntity.end_time > start_time
+                )
+            )
+        ).select())
+
+        return not result.scalar()
+
+
+

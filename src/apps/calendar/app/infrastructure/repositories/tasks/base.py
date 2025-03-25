@@ -1,4 +1,5 @@
 from abc import abstractmethod, ABC
+from datetime import datetime
 
 from app.domain.entities.events.task import TaskEntity
 from app.infrastructure.repositories.base import AbstractRepository
@@ -19,4 +20,12 @@ class TasksRepository(AbstractRepository[TaskEntity], ABC):
 
     @abstractmethod
     async def list_by_status(self, status: str, start: int | None = None, limit: int | None = None) -> list[TaskEntity]:
+        raise NotImplementedError
+
+    async def is_user_available_for_this_time(
+            self,
+            assignee_id: str,
+            start_time: datetime,
+            end_time: datetime
+    ) -> bool:
         raise NotImplementedError

@@ -25,3 +25,14 @@ class MessageBusMessageException(LogicException):
     @property
     def status(self) -> int:
         return HTTPStatus.BAD_REQUEST.value
+
+
+@dataclass(eq=False)
+class UserUnAvailableNowException(LogicException):
+    @property
+    def message(self) -> str:
+        return "User unavailable now, please change period for task"
+
+    @property
+    def status(self) -> int:
+        return HTTPStatus.BAD_REQUEST.value

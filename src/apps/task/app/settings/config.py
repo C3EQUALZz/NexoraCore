@@ -38,6 +38,27 @@ class DatabaseSettings(CommonSettings):
         return f"mongodb://{self.user}:{self.password}@{self.host}:{self.port}/"
 
 
+class AuthSettings(CommonSettings):
+    public_key: str = Field(alias="PUBLIC_KEY")
+    algorithm: str = Field(default="RS256", alias="ALGORITHM")
+
+
+class HttpxSettings(CommonSettings):
+    max_connections: int = Field(default=500, alias="MAX_CONNECTIONS")
+    max_keepalive_connections: int = Field(default=50, alias="MAX_KEEPALIVE_CONNECTIONS")
+    keepalive_expiry: float = Field(default=30.0, alias="KEEPALIVE_EXPIRY")
+    timeout: float = Field(default=20.0, alias="TIMEOUT")
+
+    user_endpoint_url: str = Field(
+        default="http://user-service-app-backend:8000/api/v1/users",
+        alias="MICROSERVICE_USER"
+    )
+
+    calendar_endpoint_url: str = Field(
+        default="http://calendar-service-app-backend:8004/api/v1/calendar",
+        alias="MICROSERVICE_CALENDAR"
+    )
+
 
 class BrokerSettings(CommonSettings):
     host: str = Field(alias="BROKER_HOST")
@@ -55,3 +76,5 @@ class Settings(CommonSettings):
 
     database: DatabaseSettings = DatabaseSettings()
     broker: BrokerSettings = BrokerSettings()
+    client: HttpxSettings = HttpxSettings()
+    auth: AuthSettings = AuthSettings()

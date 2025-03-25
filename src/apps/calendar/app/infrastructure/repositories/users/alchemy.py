@@ -50,3 +50,4 @@ class SQLAlchemyUsersRepository(SQLAlchemyAbstractRepository, UsersRepository):
             assert isinstance(entity, UserEntity)
 
         return trading_result_entities
+

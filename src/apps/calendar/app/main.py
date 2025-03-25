@@ -16,6 +16,7 @@ from app.settings.config import get_settings, Settings
 from app.settings.logger.config import setup_logging
 from app.application.api.v1.tasks.handlers import router as tasks_router
 from app.application.api.v1.meetings.handlers import router as meetings_router
+from app.application.api.v1.user.handlers import router as users_router
 
 
 @asynccontextmanager
@@ -60,5 +61,6 @@ def create_app() -> FastAPI:
 
     app.include_router(tasks_router)
     app.include_router(meetings_router)
+    app.include_router(users_router)
 
     return app

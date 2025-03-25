@@ -18,6 +18,7 @@ class TaskEntity(BaseEntity):
     description: Description
     assigned_to: UserEntity
     created_by: UserEntity
+    start_datetime: datetime
     due_datetime: datetime
     status: TaskStatus = field(default_factory=lambda: TaskStatus("open"))
     comments: list[Comment] = field(default_factory=list)
@@ -49,4 +50,5 @@ class TaskEntity(BaseEntity):
             due_datetime=document["due_datetime"],
             status=TaskStatus(document["status"]),
             comments=comments,
+            start_datetime=document["start_datetime"],
         )

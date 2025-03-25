@@ -31,6 +31,7 @@ class TaskNotFoundException(InfrastructureException):
     def status(self) -> int:
         return HTTPStatus.NOT_FOUND.value
 
+
 @dataclass(eq=False)
 class MeetingNotFoundException(InfrastructureException):
     value: str
@@ -56,6 +57,7 @@ class AttributeException(InfrastructureException):
     def status(self) -> int:
         return HTTPStatus.BAD_REQUEST.value
 
+
 @dataclass(eq=False)
 class UserNotFoundException(InfrastructureException):
     value: str
@@ -67,3 +69,14 @@ class UserNotFoundException(InfrastructureException):
     @property
     def status(self) -> int:
         return HTTPStatus.NOT_FOUND.value
+
+
+@dataclass(eq=False)
+class PoorTimeException(InfrastructureException):
+    @property
+    def message(self) -> str:
+        return "Bad time, end time must be after start time"
+
+    @property
+    def status(self) -> int:
+        return HTTPStatus.BAD_REQUEST.value

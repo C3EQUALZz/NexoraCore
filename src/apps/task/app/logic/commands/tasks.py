@@ -11,6 +11,7 @@ class CreateTaskCommand(AbstractCommand):
     assigned_to: str
     created_by: str
     due_datetime: datetime
+    start_datetime: datetime
 
 
 @dataclass(frozen=True)
@@ -21,6 +22,7 @@ class UpdateTaskCommand(AbstractCommand):
     assigned_to: str
     created_by: str
     due_datetime: datetime
+    start_datetime: datetime
     status: str
 
 

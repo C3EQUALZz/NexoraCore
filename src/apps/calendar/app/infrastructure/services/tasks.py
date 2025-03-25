@@ -1,7 +1,8 @@
+from datetime import datetime
 from typing import overload
 
 from app.domain.entities.events.task import TaskEntity
-from app.exceptions.infrastructure import TaskNotFoundException, AttributeException
+from app.exceptions.infrastructure import TaskNotFoundException, AttributeException, PoorTimeException
 from app.infrastructure.uow.events.base import EventsUnitOfWork
 
 
@@ -78,3 +79,10 @@ class TasksService:
     async def get_all(self, start: int | None = None, limit: int | None = None) -> list[TaskEntity]:
         async with self._uow as uow:
             return await uow.tasks.list(start=start, limit=limit)
+
+    async def is_user_available(self, user_id: str, start_time: datetime, end_time: datetime) -> bool:
+        if start_time > end_time:
+            raise PoorTimeException
+
+        async with self._uow as uow:
+            return await uow.tasks.is_user_available_for_this_time(user_id, start_time, end_time)

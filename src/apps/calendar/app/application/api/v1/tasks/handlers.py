@@ -88,7 +88,7 @@ async def update_task_in_calendar(
     "/{task_id}/",
     description="Delete task in calendar",
     status_code=status.HTTP_204_NO_CONTENT,
-    dependencies=[Depends(RoleChecker(allowed_roles=["admin", "user", "manager"]))]
+    dependencies=[Depends(RoleChecker(allowed_roles=["admin", "manager"]))]
 )
 async def delete_task_in_calendar(
         task_id: UUID,

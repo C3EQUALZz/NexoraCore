@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 class HTTPCalendarService(CalendarService):
-    def __init__(self, base_url: str, client: BaseClient):
-        self._base_url = base_url
+    def __init__(self, base_path: str, client: BaseClient):
+        self._base_url = base_path
         self._client = client
 
     @override

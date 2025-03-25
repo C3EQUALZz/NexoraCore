@@ -8,7 +8,7 @@ class CalendarService(ABC):
     """
 
     @abstractmethod
-    def is_user_is_available_for_period(
+    async def is_user_is_available_for_period(
             self,
             user_oid: str,
             start_time: datetime,
